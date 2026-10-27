@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>الاستدعاء الذاتي في C# — دورة تفاعلية للصف الحادي عشر</title>
+<meta name="description" content="دورة تفاعلية تعمل دون اتصال تعلّم الاستدعاء الذاتي في C# عبر مكدّس الاستدعاء المتحرك والأمثلة الموجّهة والتمارين ووضع عرض للمعلم." />
+<style>
+:root{
+  --bg:#f5f8fd; --panel:#ffffff; --ink:#0d1730; --muted:#5a6580; --line:#e3eaf5;
+  --navy:#0a1224;
+  --blue:#2563eb; --cyan:#06b6d4; --violet:#7c3aed;
+  --green:#10b981; --amber:#f59e0b; --red:#e11d48;
+  --r:16px;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:"Segoe UI",Tahoma,"Noto Naskh Arabic","Noto Sans Arabic",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --sh:0 1px 2px rgba(13,23,48,.05),0 14px 34px -20px rgba(13,23,48,.28);
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:var(--sans);color:var(--ink);font-size:15.5px;line-height:1.75;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(1100px 520px at 15% -12%,#e6f0ff 0%,transparent 62%),radial-gradient(820px 460px at 110% 0%,#eaf6ff 0%,transparent 58%),var(--bg);}
+h1,h2,h3,h4{margin:0 0 .45em;line-height:1.35;letter-spacing:0}
+h2{font-size:clamp(23px,2.6vw,32px);font-weight:800}
+h3{font-size:17.5px;font-weight:750}
+p{margin:0 0 .85em}
+ul,ol{margin:0 0 .85em;padding-right:1.15em;padding-left:0}
+li{margin:.25em 0}
+a{color:var(--blue);text-underline-offset:2px}
+code{font-family:var(--mono);font-size:.93em;direction:ltr;unicode-bidi:isolate;display:inline-block}
+button{font:inherit}
+::selection{background:#c7ddff}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:292px minmax(0,1fr);min-height:100vh}
+.sidebar{position:sticky;top:0;height:100vh;overflow-y:auto;background:#fff;border-left:1px solid var(--line);padding:20px 16px 34px;z-index:40}
+.side-brand{display:flex;align-items:center;gap:11px;padding:2px 6px 16px}
+.side-brand .mark{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(140deg,var(--blue),var(--violet));box-shadow:0 10px 20px -12px rgba(37,99,235,.95);flex:none}
+.side-brand h1{font-size:15px;margin:0;font-weight:800}
+.side-brand p{margin:1px 0 0;font-size:11.5px;color:var(--muted)}
+.side-prog{background:#f7faff;border:1px solid var(--line);border-radius:13px;padding:11px 13px;margin-bottom:18px}
+.sp-row{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--muted);font-weight:600}
+.sp-row b{color:var(--ink);font-size:13px}
+.sp-note{font-size:11px;color:var(--muted);margin-top:6px}
+.pbar{height:8px;border-radius:99px;background:#e6eefb;overflow:hidden;margin-top:7px}
+.pbar>i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(270deg,var(--blue),var(--cyan) 55%,var(--violet));transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav-group{font-size:10.5px;letter-spacing:.06em;color:#8a95ad;font-weight:700;margin:16px 8px 6px}
+.nav a{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:10px;text-decoration:none;color:#33405c;font-size:13.2px;font-weight:550;transition:background .16s,color .16s}
+.nav a:hover{background:#f2f6fd}
+.nav a.active{background:linear-gradient(270deg,#eaf1ff,#f3f7ff);color:#12306b;font-weight:700;box-shadow:inset -2px 0 0 var(--blue)}
+.nav a .tick{width:15px;height:15px;flex:none;color:#c3cde0}
+.nav a.done .tick{color:var(--green)}
+.nav a.active .tick{color:var(--blue)}
+.nav a.done.active .tick{color:var(--green)}
+.side-foot{font-size:11px;color:#93a0b8;margin-top:20px;padding:0 8px;line-height:1.6}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:35;display:flex;align-items:center;gap:14px;padding:11px clamp(14px,2.4vw,30px);
+  background:rgba(255,255,255,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.brand-mini{font-weight:800;font-size:14px;white-space:nowrap}
+.brand-mini span{font-weight:500;color:var(--muted);font-size:12px;margin-right:7px}
+.topbar .pbar{flex:1;max-width:420px;margin:0}
+.topbar .pct{font-size:12.5px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;min-width:36px}
+.spacer{flex:1}
+.content{width:100%;max-width:1220px;margin:0 auto;padding:clamp(18px,2.6vw,32px) clamp(14px,2.4vw,32px) 90px}
+.scrim{display:none;position:fixed;inset:0;background:rgba(10,18,36,.42);z-index:38;backdrop-filter:blur(2px)}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-weight:650;font-size:13.2px;padding:9px 14px;
+  border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;transition:all .16s ease;text-decoration:none;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:#c6d4ea;transform:translateY(-1px);box-shadow:0 8px 18px -12px rgba(13,23,48,.5)}
+.btn:active:not(:disabled){transform:translateY(0)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;border-color:transparent;box-shadow:0 10px 22px -14px rgba(37,99,235,.95)}
+.btn.cyan{background:linear-gradient(135deg,#0891b2,#06b6d4);color:#fff;border-color:transparent}
+.btn.soft{background:#eef4ff;border-color:#dbe6fb;color:#1c3d7a}
+.btn.ghost{background:transparent;border-color:transparent;color:#4a5876}
+.btn.ghost:hover:not(:disabled){background:#f1f5fc;box-shadow:none}
+.btn.sm{padding:6px 10px;font-size:12px;border-radius:9px}
+.icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:#fff;display:grid;place-items:center;cursor:pointer;color:#3d4b68;transition:.16s}
+.icon-btn:hover{background:#f4f8ff}
+
+/* ---------- views ---------- */
+.view{animation:fadeUp .38s cubic-bezier(.2,.8,.2,1) both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.view-head{margin-bottom:22px}
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:750;letter-spacing:.04em;color:#3f6bd4;margin-bottom:9px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 3px rgba(6,182,212,.18)}
+.lede{color:#46536e;font-size:16px;max-width:70ch;margin-bottom:12px}
+.meta-row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11.8px;font-weight:650;color:#3c4b68;background:#fff;border:1px solid var(--line);padding:4px 10px;border-radius:99px}
+
+.layout{display:grid;grid-template-columns:minmax(0,1.06fr) minmax(0,.94fr);gap:20px;align-items:start}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.viz-col{position:sticky;top:74px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:19px 21px;box-shadow:var(--sh)}
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.card-top h3{margin:0}
+.tag{font-size:10.5px;font-weight:800;letter-spacing:.04em;color:#fff;background:linear-gradient(135deg,var(--blue),var(--violet));padding:3px 8px;border-radius:6px}
+.concept h4{font-size:13.5px;margin:16px 0 6px;color:#2b3a5c}
+.concept h4:first-child{margin-top:0}
+.concept ul{color:#39465f}
+.concept b,.concept strong{color:#12306b}
+.kv{display:flex;gap:9px;align-items:baseline;flex-wrap:wrap;margin:8px 0}
+.kv .lbl{font-size:11px;font-weight:800;letter-spacing:.03em;color:#8b96ad;min-width:70px}
+.kv code{background:#f2f6fd;border:1px solid var(--line);padding:4px 9px;border-radius:8px;color:#12306b;font-weight:600}
+.out-chip{font-family:var(--mono);font-weight:700;font-size:14px;color:#0b3b2e;background:#e9fbf3;border:1px solid #b7ebd4;padding:5px 11px;border-radius:8px;direction:ltr}
+.out-chip.wide{white-space:pre-wrap}
+
+/* ---------- code ---------- */
+.code{background:var(--navy);border-radius:13px;padding:12px 0;overflow:auto;font-family:var(--mono);font-size:13px;line-height:1.8;color:#dce8ff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.045);direction:ltr;text-align:left}
+.code.mini{font-size:12.5px}
+.cl{display:grid;grid-template-columns:42px minmax(0,1fr);padding:0 14px 0 0;white-space:pre;transition:background .2s}
+.cl .ln{text-align:right;padding-right:14px;color:#33415e;user-select:none;font-size:11.5px}
+.cl.active{background:linear-gradient(90deg,rgba(37,99,235,.42),rgba(6,182,212,.14));box-shadow:inset 3px 0 0 var(--cyan)}
+.cl.active .ln{color:#8fb8ff;font-weight:700}
+.tok-kw{color:#c4b5fd}
+.tok-type{color:#67e8f9}
+.tok-fn{color:#93c5fd}
+.tok-num{color:#fbbf24}
+.tok-str{color:#86efac}
+.tok-com{color:#64748b;font-style:italic}
+.code-foot{display:flex;justify-content:space-between;font-size:11px;color:#8b96ad;margin-top:9px}
+
+/* ---------- visualizer ---------- */
+.viz{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:15px;display:flex;flex-direction:column;gap:11px}
+.viz-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.viz-tag{font-size:10.5px;font-weight:800;color:#1d4ed8;background:#eaf1ff;border:1px solid #d9e6ff;padding:3px 9px;border-radius:99px}
+.viz-count{font-size:11.5px;font-weight:700;color:#8b96ad;font-variant-numeric:tabular-nums}
+.vz-input{background:#f7faff;border:1px solid var(--line);border-radius:11px;padding:9px 11px;display:flex;flex-direction:column;gap:7px}
+.vz-input .row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.vz-input label{font-size:11.5px;font-weight:800;color:#6c7a95}
+.vz-input input[type=number],.vz-input input[type=text]{font-family:var(--mono);font-size:13px;padding:6px 9px;border-radius:8px;border:1px solid #d5e0f1;background:#fff;color:#12203c;width:104px;direction:ltr;text-align:left}
+.vz-input input[type=text]{width:100%;flex:1;min-width:150px}
+.vz-input input[type=range]{flex:1;min-width:110px;accent-color:var(--blue);direction:ltr}
+.vz-input .err{font-size:11.5px;color:var(--red);font-weight:600}
+.vz-input .hint{font-size:11px;color:#8b96ad}
+.vz-main{display:grid;grid-template-columns:minmax(0,1fr) 168px;gap:11px}
+.vz-main .code{max-height:250px}
+.panel-label{font-size:10px;font-weight:800;letter-spacing:.03em;color:#8b96ad;margin-bottom:6px;display:block}
+.stack{display:flex;flex-direction:column;gap:7px;max-height:250px;overflow-y:auto;padding-left:3px}
+.frame{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;animation:pop .26s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes pop{from{opacity:0;transform:translateX(-10px) scale(.96)}to{opacity:1;transform:none}}
+.frame-top{display:flex;align-items:center;justify-content:space-between;gap:5px}
+.frame-top code{font-size:11.5px;font-weight:700;color:#12203c}
+.frame-args{font-size:10.5px;color:#64718c;font-family:var(--mono);margin-top:2px;direction:ltr;text-align:left}
+.frame-pend{font-size:10.5px;color:#a1640a;margin-top:3px;font-family:var(--mono);direction:ltr;text-align:left}
+.frame-ret{font-size:10.5px;color:#067a55;margin-top:3px;font-family:var(--mono);font-weight:700;direction:ltr;text-align:left}
+.badge{font-size:8.5px;font-weight:800;padding:2px 5px;border-radius:5px;white-space:nowrap}
+.b-call{background:#dbeafe;color:#1d4ed8}
+.b-wait{background:#fef3c7;color:#a16207}
+.b-base{background:#ede9fe;color:#6d28d9}
+.b-ret{background:#d1fae5;color:#047857}
+.b-done{background:#e2e8f0;color:#475569}
+.frame.s-CALL{border-color:#bfdbfe;background:#f6faff}
+.frame.s-WAITING{border-color:#fde68a;background:#fffdf5}
+.frame.s-BASE{border-color:#ddd6fe;background:#faf8ff;box-shadow:0 0 0 3px rgba(124,58,237,.1)}
+.frame.s-RETURN{border-color:#a7f3d0;background:#f5fefb}
+.cells{display:flex;gap:6px;flex-wrap:wrap;direction:ltr}
+.cell{min-width:44px;border:1px solid var(--line);border-radius:9px;background:#fff;text-align:center;overflow:hidden;transition:all .22s}
+.cell .ci{font-size:9.5px;color:#93a0b8;background:#f5f8fd;padding:1px 0;font-family:var(--mono)}
+.cell .cv{font-family:var(--mono);font-weight:700;font-size:14px;padding:5px 7px}
+.cell.active{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.16);transform:translateY(-2px);background:#f7faff}
+.cell.match{border-color:var(--green);background:#ecfdf5;box-shadow:0 0 0 3px rgba(16,185,129,.18)}
+.cell.dim{opacity:.5}
+.note-box{background:linear-gradient(135deg,#0f1a31,#132444);border-radius:12px;padding:10px 13px;color:#dbe7ff;min-height:58px;display:flex;flex-direction:column;justify-content:center}
+.note-box .panel-label{color:#7b90bb;margin-bottom:2px}
+.note-box p{margin:0;font-size:12.8px;line-height:1.6}
+.vz-lower{display:grid;grid-template-columns:1fr 118px;gap:9px}
+.out-box,.res-box{background:#f7faff;border:1px solid var(--line);border-radius:11px;padding:8px 11px;min-height:56px}
+.out-box pre{margin:0;font-family:var(--mono);font-size:13px;color:#0b3b2e;white-space:pre-wrap;word-break:break-word;direction:ltr;text-align:left}
+.res-box .val{font-family:var(--mono);font-size:18px;font-weight:800;color:#12306b}
+.vz-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px}
+.vz-scrub{flex:1;min-width:80px;accent-color:var(--violet);direction:ltr}
+.speed{font-size:11.5px;font-weight:650;border:1px solid var(--line);border-radius:8px;padding:5px 6px;background:#fff;color:#3d4b68}
+
+/* ---------- exercises ---------- */
+.exs{display:flex;flex-direction:column;gap:14px;margin-top:22px}
+.exs-head{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:800;color:#6c7a95}
+.ex{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--sh)}
+.ex-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px}
+.ex-kind{font-size:10px;font-weight:800;color:#8b96ad}
+.ex-num{font-size:10.5px;font-weight:800;color:#b6c0d3}
+.ex-q{margin:0 0 11px;font-weight:600;font-size:14.6px;color:#16244a}
+.opts{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+.opt{display:flex;align-items:center;gap:10px;text-align:right;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:13.6px;color:#2a3752;transition:.15s;font-family:var(--sans)}
+.opt:hover{border-color:#bcd0ee;background:#f8fbff}
+.opt .key{width:21px;height:21px;flex:none;border-radius:6px;border:1px solid #d5e0f1;display:grid;place-items:center;font-size:11px;font-weight:800;color:#7b87a0;font-family:var(--mono)}
+.opt.sel{border-color:var(--blue);background:#eff5ff;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.opt.sel .key{background:var(--blue);border-color:var(--blue);color:#fff}
+.opt.correct{border-color:var(--green);background:#effcf6}
+.opt.correct .key{background:var(--green);border-color:var(--green);color:#fff}
+.opt.wrong{border-color:#fda4af;background:#fff1f3}
+.opt.wrong .key{background:var(--red);border-color:var(--red);color:#fff}
+.opt:disabled{cursor:default}
+.ans-input{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.ans-input input{flex:1;min-width:150px;font-family:var(--mono);font-size:14px;padding:9px 12px;border-radius:10px;border:1px solid #d5e0f1;background:#fff;color:#12203c;direction:ltr;text-align:left}
+.ans-input input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.ex-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.fb{margin-top:11px;padding:11px 13px;border-radius:11px;font-size:13.4px;display:none;line-height:1.65}
+.fb.show{display:block;animation:fadeUp .25s both}
+.fb.ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46}
+.fb.no{background:#fff1f3;border:1px solid #fecdd3;color:#9f1239}
+.fb.note{background:#f5f8fd;border:1px solid var(--line);color:#3d4b68}
+.fb.hint{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.fb.sol{background:#f6f4ff;border:1px solid #ddd6fe;color:#4c1d95}
+.fb b{font-weight:800}
+.fb pre{margin:7px 0 0;font-family:var(--mono);font-size:12.4px;background:rgba(10,18,36,.06);padding:8px 10px;border-radius:8px;overflow:auto;color:#1e293b;direction:ltr;text-align:left}
+
+/* ---------- intro ---------- */
+.hero{background:linear-gradient(135deg,#0b1428 0%,#101d3a 55%,#152046 100%);border-radius:22px;padding:clamp(22px,3.2vw,42px);color:#fff;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:26px;align-items:center;box-shadow:0 30px 70px -40px rgba(10,20,44,.9);position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;width:420px;height:420px;left:-140px;top:-160px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,.45),transparent 65%);filter:blur(6px)}
+.hero h2{font-size:clamp(27px,4vw,44px);color:#fff;margin-bottom:.35em;line-height:1.15}
+.hero .lede{color:#b9c8e6;font-size:16.5px}
+.hero .eyebrow{color:#7dd3fc}
+.hero .eyebrow .dot{background:#22d3ee}
+.hero-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+.hero .btn.soft{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.22);color:#e6efff}
+.hero-stats{list-style:none;padding:0;display:flex;gap:20px;margin:20px 0 0;flex-wrap:wrap}
+.hero-stats li{font-size:12px;color:#9fb2d6}
+.hero-stats b{display:block;font-size:20px;color:#fff;font-weight:800}
+.hero-art{position:relative;z-index:1}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:16px;margin-top:18px}
+.lesson-card{display:flex;flex-direction:column;gap:6px}
+.lesson-card .num{font-size:11px;font-weight:800;color:var(--violet)}
+.sched{list-style:none;padding:0;margin:8px 0 0;font-size:12.8px;color:#4a5876}
+.sched li{display:flex;gap:9px;padding:5px 0;border-bottom:1px dashed #eaeff8}
+.sched li:last-child{border:0}
+.sched b{color:#12306b;font-family:var(--mono);font-size:11.5px;min-width:56px;padding-top:1px;direction:ltr}
+.list-check{list-style:none;padding:0;margin:0}
+.list-check li{display:flex;gap:9px;align-items:flex-start;font-size:13.6px;color:#39465f;margin:7px 0}
+.tick-ico{width:17px;height:17px;flex:none;color:var(--green);margin-top:5px}
+
+/* ---------- teacher ---------- */
+details.teacher{background:#fbfcff;border:1px dashed #cdd9ec;border-radius:13px;padding:0;overflow:hidden}
+details.teacher>summary{cursor:pointer;padding:11px 16px;font-size:12.5px;font-weight:750;color:#41527a;list-style:none;display:flex;align-items:center;gap:8px}
+details.teacher>summary::-webkit-details-marker{display:none}
+details.teacher>summary::before{content:"◂";color:var(--violet);font-size:12px;transition:transform .2s}
+details.teacher[open]>summary::before{transform:rotate(-90deg)}
+.t-body{padding:0 16px 14px;font-size:13px;color:#43506b;border-top:1px solid #e8eefa}
+.t-row{margin-top:10px}
+.t-row b{display:block;font-size:10.5px;color:#8b96ad;margin-bottom:2px}
+
+/* ---------- pager + quiz ---------- */
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:26px;padding-top:18px;border-top:1px solid var(--line)}
+.quiz-wrap{display:flex;flex-direction:column;gap:13px;margin-top:6px}
+.q{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 18px;box-shadow:var(--sh)}
+.q-head{display:flex;gap:9px;align-items:baseline;margin-bottom:8px}
+.q-num{font-size:10.5px;font-weight:800;color:#b6c0d3;font-family:var(--mono)}
+.q-topic{font-size:10px;font-weight:800;color:#8b96ad;margin-right:auto}
+.q-text{font-weight:600;font-size:14.4px;margin:0 0 10px;color:#16244a}
+.q.review-ok{border-color:#a7f3d0}
+.q.review-no{border-color:#fecdd3}
+.q-explain{margin-top:9px;font-size:12.8px;color:#4a5876;background:#f8fafd;border-right:3px solid #cbd5e1;padding:7px 11px;border-radius:8px 0 0 8px}
+.score-card{background:linear-gradient(135deg,#0b1428,#14224a);color:#fff;border-radius:18px;padding:24px;text-align:center;box-shadow:0 26px 60px -38px rgba(10,20,44,.95)}
+.score-card .big{font-size:46px;font-weight:800;line-height:1;direction:ltr}
+.score-card p{color:#b9c8e6;margin:6px 0 0;font-size:13.5px}
+.reco{display:flex;flex-direction:column;gap:8px;margin-top:14px;text-align:right}
+.reco-item{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;color:var(--ink);border-radius:11px;padding:10px 13px;font-size:13px}
+
+/* ---------- presentation ---------- */
+.present-bar{display:none;position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:70;gap:6px;align-items:center;
+  background:rgba(10,18,36,.94);backdrop-filter:blur(10px);padding:8px 10px;border-radius:14px;box-shadow:0 24px 50px -20px rgba(10,18,36,.9);flex-wrap:wrap;max-width:96vw}
+.present-bar .btn{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.16);color:#e8f0ff;font-size:12.5px;padding:7px 11px}
+.present-bar .btn:hover{background:rgba(255,255,255,.18);box-shadow:none}
+.present-bar .sep{width:1px;height:22px;background:rgba(255,255,255,.16);margin:0 3px}
+body.present .sidebar{display:none}
+body.present .app{grid-template-columns:1fr}
+body.present{font-size:17px}
+body.present .content{max-width:1500px}
+body.present .present-bar{display:flex}
+body.present .topbar{padding-top:8px;padding-bottom:8px}
+body.present h2{font-size:clamp(28px,3.4vw,42px)}
+body.present .lede{font-size:18.5px}
+body.present .concept,.ex-q{font-size:16.5px}
+body.present .code{font-size:15px;line-height:1.9}
+body.present .viz{padding:19px}
+body.present .frame-top code{font-size:13px}
+body.present .note-box p{font-size:15px}
+body.present .opts .opt{font-size:15px;padding:11px 14px}
+
+/* ---------- responsive ---------- */
+@media (max-width:1080px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .viz-col{position:static}
+  .hero{grid-template-columns:1fr}
+  .hero-art{display:none}
+}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{position:fixed;right:0;top:0;width:290px;transform:translateX(104%);transition:transform .28s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 60px rgba(10,18,36,.24)}
+  .sidebar.open{transform:none}
+  .scrim.show{display:block}
+  .brand-mini span{display:none}
+  #presentBtn span{display:none}
+}
+@media (max-width:640px){
+  .vz-main{grid-template-columns:1fr}
+  .code{font-size:12px}
+  .topbar{gap:9px}
+  .topbar .pct{display:none}
+  .pager{flex-direction:column-reverse}
+  .pager .btn{width:100%}
+  .vz-lower{grid-template-columns:1fr}
+  .card{padding:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+@media print{.sidebar,.topbar,.present-bar,.vz-controls,.btn{display:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="scrim" id="scrim"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="side-brand">
+      <span class="mark" aria-hidden="true">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h6a2 2 0 0 1 2 2v8a2 2 0 0 0 2 2h6"/><path d="M17 5l3 3-3 3"/><path d="M7 15l-3 3 3 3"/></svg>
+      </span>
+      <div><h1>الاستدعاء الذاتي في C#</h1><p>الصف الحادي عشر · درسان</p></div>
+    </div>
+    <div class="side-prog">
+      <div class="sp-row"><span>تقدّم الدورة</span><b id="sidePct">0%</b></div>
+      <div class="pbar"><i id="sideBar"></i></div>
+      <div class="sp-note" id="sideNote">0 من 11 قسمًا مكتمل</div>
+    </div>
+    <nav class="nav" id="nav" aria-label="التنقل بين أقسام الدورة"></nav>
+    <div class="side-foot">يُحفظ تقدّمك داخل هذا المتصفح فقط، ولا يُرسل أي شيء خارج جهازك.</div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-btn" id="menuBtn" aria-label="إظهار قائمة الدروس">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="brand-mini">الاستدعاء الذاتي في C#<span>دورة تفاعلية</span></div>
+      <div class="pbar"><i id="topBar"></i></div>
+      <span class="pct" id="topPct">0%</span>
+      <button class="btn soft" id="presentBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        <span>عرض تقديمي</span>
+      </button>
+    </header>
+    <div class="content" id="content"></div>
+  </main>
+</div>
+<div class="present-bar" id="presentBar" role="toolbar" aria-label="أدوات العرض التقديمي">
+  <button class="btn" data-p="prev">◀ السابق</button>
+  <button class="btn" data-p="next">التالي ▶</button>
+  <span class="sep"></span>
+  <button class="btn" data-p="play">▶ تشغيل</button>
+  <button class="btn" data-p="pause">❚❚ إيقاف</button>
+  <button class="btn" data-p="reset">↺ إعادة</button>
+  <button class="btn" data-p="step">خطوة ←</button>
+  <span class="sep"></span>
+  <button class="btn" data-p="reveal">أظهر الإجابة</button>
+  <button class="btn" data-p="full">⛶ ملء الشاشة</button>
+  <button class="btn" data-p="exit">خروج</button>
+</div>
+<script>
+"use strict";
+var $ = function (s, r) { return (r || document).querySelector(s); };
+var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+var CS_KW = { "static": 1, "void": 1, "int": 1, "bool": 1, "return": 1, "if": 1, "else": 1, "new": 1, "string": 1, "true": 1, "false": 1, "null": 1, "class": 1, "public": 1, "for": 1, "while": 1, "foreach": 1, "in": 1, "var": 1 };
+var TOK = /(\/\/[^\n]*)|("(?:[^"\\]|\\.)*")|(\b\d+\b)|([A-Za-z_][A-Za-z0-9_]*)|(\s+)|([^\sA-Za-z0-9_])/g;
+function highlight(code) {
+  var out = "", m;
+  TOK.lastIndex = 0;
+  while ((m = TOK.exec(code)) !== null) {
+    if (m[1]) out += '<span class="tok-com">' + esc(m[1]) + "</span>";
+    else if (m[2]) out += '<span class="tok-str">' + esc(m[2]) + "</span>";
+    else if (m[3]) out += '<span class="tok-num">' + esc(m[3]) + "</span>";
+    else if (m[4]) {
+      var w = m[4];
+      if (CS_KW[w]) out += '<span class="tok-kw">' + w + "</span>";
+      else if (/^[A-Z]/.test(w)) out += '<span class="tok-fn">' + w + "</span>";
+      else out += esc(w);
+    } else out += esc(m[5] || m[6]);
+  }
+  return out;
+}
+function codePanel(codeLines) {
+  return codeLines.map(function (l, i) {
+    return '<div class="cl" data-i="' + i + '"><span class="ln">' + (i + 1) + '</span><span class="lc">' + (highlight(l) || "&nbsp;") + "</span></div>";
+  }).join("");
+}
+
+/* ---------------- C# source used by the lessons ---------------- */
+var CODE = {
+  printBefore: "static void Print(int n)\n{\n    if (n == 0)\n        return;\n\n    Console.Write(n + \" \");\n    Print(n - 1);\n}",
+  printAfter: "static void Print(int n)\n{\n    if (n == 0)\n        return;\n\n    Print(n - 1);\n    Console.Write(n + \" \");\n}",
+  sum: "static int Sum(int n)\n{\n    if (n == 0)\n        return 0;\n\n    return n + Sum(n - 1);\n}",
+  digitSum: "static int DigitSum(int n)\n{\n    if (n == 0)\n        return 0;\n\n    return n % 10 + DigitSum(n / 10);\n}",
+  digits: "static int Digits(int n)\n{\n    if (n < 10)\n        return 1;\n\n    return 1 + Digits(n / 10);\n}",
+  maximum: "static int Maximum(int[] a, int index)\n{\n    if (index == a.Length - 1)\n        return a[index];\n\n    int maxRest = Maximum(a, index + 1);\n\n    if (a[index] > maxRest)\n        return a[index];\n\n    return maxRest;\n}",
+  minimum: "static int Minimum(int[] a, int index)\n{\n    if (index == a.Length - 1)\n        return a[index];\n\n    int minRest = Minimum(a, index + 1);\n\n    if (a[index] < minRest)\n        return a[index];\n\n    return minRest;\n}",
+  countEven: "static int CountEven(int[] a, int index)\n{\n    if (index == a.Length)\n        return 0;\n\n    int count = CountEven(a, index + 1);\n\n    if (a[index] % 2 == 0)\n        return count + 1;\n\n    return count;\n}",
+  contains: "static bool Contains(int[] a, int index, int x)\n{\n    if (index == a.Length)\n        return false;\n\n    if (a[index] == x)\n        return true;\n\n    return Contains(a, index + 1, x);\n}"
+};
+
+/* ---------------- trace recorder ---------------- */
+function makeRec() {
+  return {
+    frames: [], stack: [], uid: 0, out: "", result: null,
+    snap: function (line, note, extra) {
+      var f = {
+        line: line, note: note, output: this.out, result: this.result,
+        stack: this.stack.map(function (s) { return { id: s.id, label: s.label, args: s.args, state: s.state, pending: s.pending, ret: s.ret, line: s.line }; })
+      };
+      if (extra) for (var k in extra) f[k] = extra[k];
+      this.frames.push(f);
+    },
+    push: function (label, args) {
+      var f = { id: ++this.uid, label: label, args: args, state: "CALL", pending: "", ret: null };
+      this.stack.push(f); return f;
+    },
+    pop: function () { this.stack.pop(); }
+  };
+}
+
+var TRACES = {
+  printBefore: function (inp) {
+    var r = makeRec();
+    (function call(n) {
+      var f = r.push("Print(" + n + ")", { n: n });
+      r.snap(1, "استدعاء Print(" + n + ") — يُضاف إطار جديد إلى أعلى مكدّس الاستدعاء.");
+      f.state = "WAITING";
+      r.snap(2, "تحقّق من الحالة الأساسية: هل n == 0؟   (n = " + n + ")");
+      if (n === 0) {
+        f.state = "BASE";
+        r.snap(3, "وصلنا إلى الحالة الأساسية. تُرجع Print(0) فورًا دون طباعة أي شيء.");
+        f.ret = "—"; f.state = "RETURN";
+        r.snap(3, "تُرجع Print(0) إلى مُستدعيها.");
+        r.pop(); return;
+      }
+      r.snap(5, "الشرط n == 0 غير محقّق، فنُطبع قبل الاستدعاء الذاتي: Console.Write(" + n + " + \" \")");
+      r.out = r.out ? r.out + " " + n : String(n);
+      r.snap(5, "المخرجات حتى الآن: «" + r.out + "»");
+      f.pending = "Print(" + (n - 1) + ")"; f.state = "WAITING";
+      r.snap(6, "استدعِ Print(" + (n - 1) + "). يتوقّف هذا الإطار عند السطر 6 حتى يعود الاستدعاء.");
+      call(n - 1);
+      f.pending = ""; f.state = "RETURN";
+      r.snap(7, "تنتهي Print(" + n + ") ويعود التحكّم إلى مُستدعيها.");
+      r.pop();
+    })(inp.n);
+    r.snap(-1, "انتهى التنفيذ. المكدّس فارغ والمخرجات هي: " + r.out);
+    return r.frames;
+  },
+
+  printAfter: function (inp) {
+    var r = makeRec();
+    (function call(n) {
+      var f = r.push("Print(" + n + ")", { n: n });
+      r.snap(1, "استدعاء Print(" + n + ") — يُضاف إطار جديد إلى أعلى مكدّس الاستدعاء.");
+      f.state = "WAITING";
+      r.snap(2, "تحقّق من الحالة الأساسية: هل n == 0؟   (n = " + n + ")");
+      if (n === 0) {
+        f.state = "BASE";
+        r.snap(3, "وصلنا إلى الحالة الأساسية. تُرجع Print(0) فورًا.");
+        f.ret = "—"; f.state = "RETURN";
+        r.snap(3, "تُرجع Print(0) إلى مُستدعيها — وما زال لا شيء مطبوعًا.");
+        r.pop(); return;
+      }
+      f.pending = "Print(" + (n - 1) + ")"; f.state = "WAITING";
+      r.snap(5, "استدعِ Print(" + (n - 1) + ") أولًا. لا تُطبع أي قيمة بعد — هذا الإطار في انتظار.");
+      call(n - 1);
+      f.pending = "";
+      r.snap(6, "عاد الاستدعاء الأعمق. الآن اطبع " + n + " — وهذا يحدث بعد الاستدعاء.");
+      r.out = r.out ? r.out + " " + n : String(n);
+      r.snap(6, "المخرجات حتى الآن: «" + r.out + "»");
+      f.state = "RETURN";
+      r.snap(7, "تنتهي Print(" + n + ").");
+      r.pop();
+    })(inp.n);
+    r.snap(-1, "انتهى التنفيذ. المخرجات هي: " + r.out);
+    return r.frames;
+  },
+
+  sum: function (inp) {
+    var r = makeRec();
+    var final = (function call(n) {
+      var f = r.push("Sum(" + n + ")", { n: n });
+      r.snap(1, "استدعاء Sum(" + n + ")");
+      f.state = "WAITING";
+      r.snap(2, "هل n == 0؟   (n = " + n + ")");
+      if (n === 0) {
+        f.state = "BASE";
+        r.snap(3, "الحالة الأساسية: تُرجع Sum(0) القيمة 0، ولا تُجرى استدعاءات أخرى.");
+        f.ret = 0; f.state = "RETURN";
+        r.snap(3, "تُرجع Sum(0) القيمة 0 إلى مُستدعيها.");
+        r.pop(); return 0;
+      }
+      f.pending = n + " + Sum(" + (n - 1) + ")";
+      r.snap(5, "Sum(" + n + ") = " + n + " + Sum(" + (n - 1) + ") ← يتوقّف الإطار في انتظار Sum(" + (n - 1) + ").");
+      var got = call(n - 1);
+      f.pending = "";
+      f.ret = n + got; f.state = "RETURN";
+      r.snap(5, "أعادت Sum(" + (n - 1) + ") القيمة " + got + ". إذن Sum(" + n + ") = " + n + " + " + got + " = " + (n + got) + ".");
+      r.pop();
+      return n + got;
+    })(inp.n);
+    r.result = final;
+    r.snap(-1, "الإجابة: Sum(" + inp.n + ") = " + final + ".");
+    return r.frames;
+  },
+
+  digitSum: function (inp) {
+    var r = makeRec();
+    var final = (function call(n) {
+      var f = r.push("DigitSum(" + n + ")", { n: n });
+      r.snap(1, "استدعاء DigitSum(" + n + ")");
+      f.state = "WAITING";
+      r.snap(2, "هل n == 0؟   (n = " + n + ")");
+      if (n === 0) {
+        f.state = "BASE";
+        r.snap(3, "الحالة الأساسية: لم يتبقَّ أي رقم، لذا تُرجع DigitSum(0) القيمة 0.");
+        f.ret = 0; f.state = "RETURN";
+        r.snap(3, "تُرجع DigitSum(0) القيمة 0 إلى مُستدعيها.");
+        r.pop(); return 0;
+      }
+      var last = n % 10, rest = Math.floor(n / 10);
+      f.pending = last + " + DigitSum(" + rest + ")";
+      r.snap(5, "n % 10 = " + last + " (الرقم الأخير)   و   n / 10 = " + rest + " (القسمة الصحيحة تحذفه).");
+      r.snap(5, "DigitSum(" + n + ") = " + last + " + DigitSum(" + rest + ") ← انتظر العدد الأصغر.");
+      var got = call(rest);
+      f.pending = "";
+      f.ret = last + got; f.state = "RETURN";
+      r.snap(5, "أعادت DigitSum(" + rest + ") القيمة " + got + ". إذن DigitSum(" + n + ") = " + last + " + " + got + " = " + (last + got) + ".");
+      r.pop();
+      return last + got;
+    })(inp.n);
+    r.result = final;
+    r.snap(-1, "الإجابة: مجموع أرقام العدد " + inp.n + " يساوي " + final + ".");
+    return r.frames;
+  },
+
+  digits: function (inp) {
+    var r = makeRec();
+    var final = (function call(n) {
+      var f = r.push("Digits(" + n + ")", { n: n });
+      r.snap(1, "استدعاء Digits(" + n + ")");
+      f.state = "WAITING";
+      r.snap(2, "هل n < 10؟   (n = " + n + ")");
+      if (n < 10) {
+        f.state = "BASE";
+        r.snap(3, "الحالة الأساسية: العدد " + n + " مكوّن من رقم واحد، لذا يُحتسب رقمًا واحدًا.");
+        f.ret = 1; f.state = "RETURN";
+        r.snap(3, "تُرجع Digits(" + n + ") القيمة 1.");
+        r.pop(); return 1;
+      }
+      var rest = Math.floor(n / 10);
+      f.pending = "1 + Digits(" + rest + ")";
+      r.snap(5, "n / 10 = " + rest + " — القسمة الصحيحة تحذف رقمًا واحدًا. عُدّ الباقي ثم أضف 1.");
+      var got = call(rest);
+      f.pending = "";
+      f.ret = 1 + got; f.state = "RETURN";
+      r.snap(5, "أعادت Digits(" + rest + ") القيمة " + got + ". إذن Digits(" + n + ") = 1 + " + got + " = " + (1 + got) + ".");
+      r.pop();
+      return 1 + got;
+    })(inp.n);
+    r.result = final;
+    r.snap(-1, "الإجابة: العدد " + inp.n + " يتكوّن من " + final + " رقماً.");
+    return r.frames;
+  }
+};
+Object.assign(TRACES, {
+  maximum: function (inp) {
+    var a = inp.arr.slice(), r = makeRec();
+    function snapAt(line, note, active, extra) {
+      var e = { arr: a.slice(), active: active };
+      if (extra) for (var k in extra) e[k] = extra[k];
+      r.snap(line, note, e);
+    }
+    var last = a.length - 1;
+    var final = (function call(index) {
+      var f = r.push("Maximum(a, " + index + ")", { index: index });
+      snapAt(1, "استدعاء Maximum(a, " + index + ") — انظر إلى الفهرس " + index + ".", index);
+      f.state = "WAITING";
+      snapAt(2, "هل index == a.Length - 1؟   (" + index + " == " + last + ")", index);
+      if (index === last) {
+        f.state = "BASE";
+        snapAt(3, "الحالة الأساسية: بقي عنصر واحد في هذا النطاق — a[" + index + "] = " + a[index] + " هو أكبر عنصر فيه.", index);
+        f.ret = a[index]; f.state = "RETURN";
+        snapAt(3, "تُرجع Maximum(a, " + index + ") القيمة " + a[index] + ".", index);
+        r.pop(); return a[index];
+      }
+      f.pending = "Maximum(a, " + (index + 1) + ")";
+      snapAt(5, "ابحث عن أكبر عنصر في البقية: Maximum(a, " + (index + 1) + "). هذا الإطار ينتظر.", index);
+      var rest = call(index + 1);
+      f.pending = "";
+      var bigger = a[index] > rest;
+      snapAt(7, "maxRest = " + rest + ". قارن a[" + index + "] = " + a[index] + " > " + rest + " → " + bigger + ".", index);
+      f.ret = bigger ? a[index] : rest; f.state = "RETURN";
+      snapAt(bigger ? 8 : 10, bigger ? a[index] + " أكبر → أرجع a[" + index + "] = " + a[index] + "." : a[index] + " ليس أكبر → أرجع maxRest = " + rest + ".", index);
+      r.pop(); return bigger ? a[index] : rest;
+    })(0);
+    r.result = final;
+    snapAt(-1, "انتهى. أكبر قيمة هي " + final + ".", -1);
+    return r.frames;
+  },
+
+  minimum: function (inp) {
+    var a = inp.arr.slice(), r = makeRec();
+    function snapAt(line, note, active) { r.snap(line, note, { arr: a.slice(), active: active }); }
+    var last = a.length - 1;
+    var final = (function call(index) {
+      var f = r.push("Minimum(a, " + index + ")", { index: index });
+      snapAt(1, "استدعاء Minimum(a, " + index + ") — انظر إلى الفهرس " + index + ".", index);
+      f.state = "WAITING";
+      snapAt(2, "هل index == a.Length - 1؟   (" + index + " == " + last + ")", index);
+      if (index === last) {
+        f.state = "BASE";
+        snapAt(3, "الحالة الأساسية: بقي عنصر واحد — a[" + index + "] = " + a[index] + " هو أصغر عنصر فيه.", index);
+        f.ret = a[index]; f.state = "RETURN";
+        snapAt(3, "تُرجع Minimum(a, " + index + ") القيمة " + a[index] + ".", index);
+        r.pop(); return a[index];
+      }
+      f.pending = "Minimum(a, " + (index + 1) + ")";
+      snapAt(5, "ابحث عن أصغر عنصر في البقية: Minimum(a, " + (index + 1) + "). هذا الإطار ينتظر.", index);
+      var rest = call(index + 1);
+      f.pending = "";
+      var smaller = a[index] < rest;
+      snapAt(7, "minRest = " + rest + ". قارن a[" + index + "] = " + a[index] + " < " + rest + " → " + smaller + ".", index);
+      f.ret = smaller ? a[index] : rest; f.state = "RETURN";
+      snapAt(smaller ? 8 : 10, smaller ? a[index] + " أصغر → أرجع a[" + index + "] = " + a[index] + "." : a[index] + " ليس أصغر → أرجع minRest = " + rest + ".", index);
+      r.pop(); return smaller ? a[index] : rest;
+    })(0);
+    r.result = final;
+    snapAt(-1, "انتهى. أصغر قيمة هي " + final + ".", -1);
+    return r.frames;
+  },
+
+  countEven: function (inp) {
+    var a = inp.arr.slice(), r = makeRec();
+    function snapAt(line, note, active) { r.snap(line, note, { arr: a.slice(), active: active }); }
+    var len = a.length;
+    var final = (function call(index) {
+      var f = r.push("CountEven(a, " + index + ")", { index: index });
+      snapAt(1, "استدعاء CountEven(a, " + index + ")", index);
+      f.state = "WAITING";
+      snapAt(2, "هل index == a.Length؟   (" + index + " == " + len + ")", index);
+      if (index === len) {
+        f.state = "BASE";
+        snapAt(3, "الحالة الأساسية: تجاوزنا نهاية المصفوفة، لذا لم يتبقَّ أي عنصر زوجي لعدّه.", index);
+        f.ret = 0; f.state = "RETURN";
+        snapAt(3, "تُرجع CountEven(a, " + index + ") القيمة 0.", index);
+        r.pop(); return 0;
+      }
+      f.pending = "CountEven(a, " + (index + 1) + ")";
+      snapAt(5, "عُدّ العناصر الزوجية في بقية المصفوفة أولًا: CountEven(a, " + (index + 1) + ").", index);
+      var rest = call(index + 1);
+      f.pending = "";
+      var even = a[index] % 2 === 0;
+      snapAt(7, "count = " + rest + ". هل a[" + index + "] = " + a[index] + " زوجي؟   " + a[index] + " % 2 == " + (a[index] % 2) + " → " + even + ".", index);
+      f.ret = even ? rest + 1 : rest; f.state = "RETURN";
+      snapAt(even ? 8 : 10, even ? "زوجي → أرجع count + 1 = " + rest + " + 1 = " + (rest + 1) + "." : "فردي → أرجع count = " + rest + ".", index);
+      r.pop(); return even ? rest + 1 : rest;
+    })(0);
+    r.result = final;
+    snapAt(-1, "انتهى. تحتوي المصفوفة على " + final + " عنصراً زوجياً.", -1);
+    return r.frames;
+  },
+
+  contains: function (inp) {
+    var a = inp.arr.slice(), x = inp.x, r = makeRec();
+    function snapAt(line, note, active, match) {
+      r.snap(line, note, { arr: a.slice(), active: active, match: (typeof match === "number" ? match : -1) });
+    }
+    var len = a.length;
+    var final = (function call(index) {
+      var f = r.push("Contains(a, " + index + ", " + x + ")", { index: index, x: x });
+      snapAt(1, "استدعاء Contains(a, " + index + ", " + x + ")", index);
+      f.state = "WAITING";
+      snapAt(2, "هل index == a.Length؟   (" + index + " == " + len + ")", index);
+      if (index === len) {
+        f.state = "BASE";
+        snapAt(3, "الحالة الأساسية: فحصنا كل العناصر ولم نجد " + x + " → أرجع false.", index);
+        f.ret = false; f.state = "RETURN";
+        snapAt(3, "تُرجع Contains القيمة false.", index);
+        r.pop(); return false;
+      }
+      snapAt(5, "قارن a[" + index + "] = " + a[index] + " مع x = " + x + ".", index);
+      if (a[index] === x) {
+        f.state = "BASE";
+        snapAt(6, "تطابق! a[" + index + "] == " + x + " → أرجع true وتوقّف عن البحث.", index, index);
+        f.ret = true; f.state = "RETURN";
+        snapAt(6, "تُرجع Contains القيمة true، ولا تُجرى استدعاءات أعمق.", index, index);
+        r.pop(); return true;
+      }
+      snapAt(8, "لا تطابق. استدعِ نفسها بالفهرس " + (index + 1) + ".", index);
+      f.pending = "Contains(a, " + (index + 1) + ", " + x + ")";
+      var got = call(index + 1);
+      f.pending = "";
+      f.ret = got; f.state = "RETURN";
+      snapAt(8, "أعاد الاستدعاء الأعمق القيمة " + got + " → تُرجع Contains(a, " + index + ", " + x + ") القيمة " + got + ".", index, got ? index : -1);
+      r.pop(); return got;
+    })(0);
+    r.result = final;
+    snapAt(-1, "انتهى. Contains(a, 0, " + x + ") = " + final + ".", -1);
+    return r.frames;
+  }
+});
+var GROUPS = [
+  { id: "start", label: "ابدأ من هنا" },
+  { id: "l1", label: "الدرس الأول · الأعداد" },
+  { id: "l2", label: "الدرس الثاني · المصفوفات" },
+  { id: "end", label: "الختام" }
+];
+
+var EXAMPLES = [
+{
+  id: "l1a", group: "l1", nav: "أ · الطباعة قبل الاستدعاء",
+  eyebrow: "الدرس الأول · مثال أ", title: "الطباعة قبل الاستدعاء الذاتي",
+  minutes: "6 دقائق", topic: "الحالة الأساسية · ترتيب العبارات",
+  lede: "ابدأ بأبسط صورة للدالة التكرارية: اطبع رقمًا، ثم اترك بقية العمل لاستدعاء أصغر.",
+  concept: '<p>الدالة التكرارية تحلّ المسألة عبر <b>استدعاء نفسها</b> بمدخل أصغر. قاعدتان تحفظان سلامتها:</p>' +
+    '<ul><li><b>حالة أساسية</b> توقف التكرار — هنا <code>n == 0</code>.</li>' +
+    '<li><b>استدعاء ذاتي</b> يقترب دائمًا من الحالة الأساسية — هنا <code>Print(n - 1)</code>.</li></ul>' +
+    '<h4>ماذا تراقب</h4>' +
+    '<p>تُنفَّذ <code>Console.Write</code> <b>قبل</b> الاستدعاء الذاتي، لذلك تطبع <code>Print(4)</code> الرقم <code>4</code> أولًا ثم تسلّم بقية العمل إلى <code>Print(3)</code>. تخرج الأعداد <b>تنازليًا</b>، ولا يُطبع شيء أثناء عودة المكدّس.</p>' +
+    '<p>يُستدعى <code>Print(0)</code> أيضًا، لكنه يعود فورًا. لذلك تُجري <code>Print(4)</code> خمسة استدعاءات لا أربعة.</p>',
+  code: CODE.printBefore, call: "Print(4);", outLabel: "المخرجات المتوقعة", out: "4 3 2 1",
+  input: { kind: "number", min: 0, max: 6, def: 4, label: "n" },
+  trace: TRACES.printBefore,
+  teacher: {
+    time: "6 دقائق",
+    ask: "قبل التشغيل: أي رقم يُطبع أولًا؟ وأي رقم يُطبع أخيرًا؟",
+    expect: "4 أولًا و1 أخيرًا، لأن Print(4) تطبع فورًا ثم تستدعي Print(3).",
+    mis: "يفترض الطلاب غالبًا أن المخرجات تظهر أثناء نزول الاستدعاءات. أشِر إلى السطر 5 — الطباعة تحدث قبل السطر 6. وينسون أن Print(0) تُستدعى فعلًا."
+  },
+  exercises: [
+    { id: "x-l1a-1", type: "mc", q: "أي سطر يمثّل الحالة الأساسية في هذه الدالة؟",
+      options: ["if (n == 0) return;", "Console.Write(n + \" \");", "Print(n - 1);", "static void Print(int n)"], answer: 0,
+      hint: "الحالة الأساسية هي الشرط الذي يوقف التكرار دون إجراء استدعاء آخر.",
+      solution: "if (n == 0)\n    return;",
+      explain: "عندما يصل n إلى 0 تعود الدالة دون استدعاء نفسها، فيتوقّف التكرار." },
+    { id: "x-l1a-2", type: "text", q: "كم مرة تُستدعى الدالة Print إجمالًا عند تشغيل Print(4)؟ احسب استدعاء الحالة الأساسية أيضًا.",
+      answers: ["5"], hint: "اكتب سلسلة الاستدعاءات: Print(4)، Print(3)، … حتى أي قيمة؟",
+      solution: "5 استدعاءات — Print(4)، Print(3)، Print(2)، Print(1)، Print(0).",
+      explain: "تمتد السلسلة من 4 نزولًا إلى 0 بما فيها 0، أي n + 1 = 5 استدعاءات." }
+  ]
+},
+{
+  id: "l1b", group: "l1", nav: "ب · الطباعة بعد الاستدعاء",
+  eyebrow: "الدرس الأول · مثال ب", title: "الطباعة بعد الاستدعاء الذاتي",
+  minutes: "6 دقائق", topic: "مرحلة العودة",
+  lede: "بادِل بين سطرين فقط فتَنقلب المخرجات. هذا أوضح دليل على طريقة تفكيك مكدّس الاستدعاء.",
+  concept: '<p>هذه هي الدالة نفسها بعد تبديل العبارتين الأخيرتين. الآن يحدث الاستدعاء الذاتي <b>أولًا</b>.</p>' +
+    '<p>كل استدعاء — <code>Print(4)</code> و<code>Print(3)</code> و<code>Print(2)</code> و<code>Print(1)</code> — يصل إلى السطر 5 ثم <b>ينتظر</b>. لا يُطبع شيء بينما ينمو المكدّس، وتبدأ الطباعة فقط عندما تعود <code>Print(0)</code>، وتبدأ من الإطار الأعمق.</p>' +
+    '<h4>لماذا ينقلب الترتيب؟</h4>' +
+    '<p>مكدّس الاستدعاء يعمل بنظام <b>آخر داخل أول خارج</b>. الإطار الأعمق ينتهي أولًا، فيُطبع <code>1</code> قبل <code>2</code>، وترتفع الأعداد بدل أن تنزل.</p>' +
+    '<h4>قارن بين أ و ب</h4>' +
+    '<p>الحالة الأساسية نفسها، والاستدعاء الذاتي نفسه، وعدد الاستدعاءات نفسه. تغيّر <b>موضع</b> الطباعة فقط، وهذا كافٍ لقلب المخرجات كلها.</p>',
+  code: CODE.printAfter, call: "Print(4);", outLabel: "المخرجات المتوقعة", out: "1 2 3 4",
+  input: { kind: "number", min: 0, max: 6, def: 4, label: "n" },
+  trace: TRACES.printAfter,
+  teacher: {
+    time: "6 دقائق",
+    ask: "كلتا الدالتين تُجريان خمسة استدعاءات. فلماذا تختلف المخرجات؟",
+    expect: "لأن Console.Write تأتي بعد الاستدعاء الذاتي، فتُنفَّذ أثناء العودة بدءًا من الإطار الأعمق.",
+    mis: "قد يقول الطلاب إن الدالة تطبع «بالعكس». هي لا تطبع بالعكس بل بترتيب العودة. اطلب منهم تحديد السطر الذي يطبع بالضبط."
+  },
+  exercises: [
+    { id: "x-l1b-1", type: "mc", q: "ما مخرجات هذه النسخة عند Print(3)؟",
+      options: ["3 2 1", "1 2 3", "3 2 1 0", "لا شيء"], answer: 1,
+      hint: "تتبّعها: آخر استدعاء يعود هو Print(3)، وهو يطبع بعد استدعائه.",
+      solution: "1 2 3",
+      explain: "تعود Print(1) أولًا وتطبع 1، ثم تطبع Print(2) الرقم 2، ثم تطبع Print(3) الرقم 3." },
+    { id: "x-l1b-2", type: "mc", q: "لماذا تختلف المخرجات عن المثال أ؟",
+      options: ["لأن n يتناقص", "لأن Console.Write تُنفَّذ بعد عودة الاستدعاء الذاتي، فيطبع الإطار الأعمق أولًا", "لأن الحالة الأساسية مختلفة", "لأن Console.Write تخزّن مخرجاتها"], answer: 1,
+      hint: "أي عبارة تُنفَّذ أولًا داخل كل إطار؟",
+      solution: "تأجّل الطباعة إلى ما بعد عودة الاستدعاء، فتُطبع الأطر بترتيب معاكس لترتيب الاستدعاء.",
+      explain: "يتفكّك المكدّس من الإطار الأعمق صعودًا. عبارة الدالة تُنفَّذ بعد انتهاء استدعائها، فيُطبع أصغر n أولًا." }
+  ]
+},
+{
+  id: "l1c", group: "l1", nav: "ج · مجموع من 1 إلى n",
+  eyebrow: "الدرس الأول · مثال ج", title: "مجموع الأعداد من 1 إلى n",
+  minutes: "8 دقائق", topic: "إرجاع القيم",
+  lede: "أشهر دالة تكرارية أولى: كل استدعاء يضيف رقمه إلى نتيجة استدعاء أصغر.",
+  concept: '<p>يمكن للدالة التكرارية أن <b>تُرجع</b> قيمة أيضًا. تقول <code>Sum(n)</code>: مجموع 1…n هو n زائد مجموع 1…(n−1).</p>' +
+    '<p>هذا التعريف يحتاج نقطة توقف: مجموع لا شيء يساوي 0، إذن <code>Sum(0) = 0</code>.</p>' +
+    '<h4>مرحلتان</h4>' +
+    '<ul><li><b>النزول:</b> Sum(4) ← Sum(3) ← Sum(2) ← Sum(1) ← Sum(0). كل إطار معلّق ويحتفظ بعملية <code>n + ?</code>.</li>' +
+    '<li><b>العودة:</b> تُرجع Sum(0) القيمة 0، ثم يضيف كل إطار قيمته هو: 1 ثم 3 ثم 6 ثم 10.</li></ul>' +
+    '<p>لا يُجري الجمع إلا بعد عودة الاستدعاء الذاتي. راقب وسم <b>العملية المعلّقة</b> في كل إطار، ثم راقبه يتحوّل إلى قيمة مُعادة.</p>',
+  code: CODE.sum, call: "Console.WriteLine(Sum(4));", outLabel: "النتيجة المتوقعة", out: "10",
+  input: { kind: "number", min: 0, max: 10, def: 4, label: "n", slider: true },
+  trace: TRACES.sum,
+  teacher: {
+    time: "10 دقائق",
+    ask: "كم إطارًا على المكدّس في اللحظة التي تُنفَّذ فيها Sum(0)؟",
+    expect: "خمسة — Sum(4) وSum(3) وSum(2) وSum(1) وSum(0).",
+    mis: "الخطأ الشائع هو الاعتقاد بأن الجمع يحدث أثناء النزول. لا يُجمع شيء حتى تعود قيمة."
+  },
+  exercises: [
+    { id: "x-l1c-1", type: "text", q: "ماذا تُرجع Sum(6)؟",
+      answers: ["21"], hint: "1 + 2 + 3 + 4 + 5 + 6",
+      solution: "21", explain: "1+2+3+4+5+6 = 21، ويبنيها التكرار على صورة 6 + (5 + (4 + (3 + (2 + (1 + 0)))))." },
+    { id: "x-l1c-2", type: "mc", q: "أي سطر هو الاستدعاء الذاتي؟",
+      options: ["if (n == 0)", "return 0;", "return n + Sum(n - 1);", "static int Sum(int n)"], answer: 2,
+      hint: "ابحث عن السطر الذي يظهر فيه اسم Sum في الطرف الآخر من المعادلة.",
+      solution: "return n + Sum(n - 1);",
+      explain: "تستدعي الدالة نفسها بالقيمة n - 1 ثم تضيف n إلى ما يعود." },
+    { id: "x-l1c-3", type: "mc", q: "لماذا تتوقف Sum(n) دائمًا؟",
+      options: ["لأن C# تحدّد عمقًا أعلى للتكرار", "لأن كل استدعاء يستخدم n - 1، فيصل n إلى 0 وتعود الحالة الأساسية", "لأن Sum تُرجع int", "لأن المكدّس يفرغ نفسه"], answer: 1,
+      hint: "ماذا يحدث لقيمة n في كل استدعاء؟",
+      solution: "كل استدعاء أقرب تمامًا إلى الحالة الأساسية n == 0.",
+      explain: "عندما n ≥ 0 تتناقص القيمة بمقدار 1 في كل استدعاء حتى تصل إلى الحالة الأساسية. ولو بدأت n سالبة لاستمرت هذه النسخة بلا نهاية، ولهذا نسمح فقط بـ n ≥ 0." }
+  ]
+},
+{
+  id: "l1d", group: "l1", nav: "د · مجموع أرقام العدد",
+  eyebrow: "الدرس الأول · مثال د", title: "مجموع أرقام العدد",
+  minutes: "7 دقائق", topic: "باقي القسمة والقسمة الصحيحة",
+  lede: "انتزع الرقم الأخير بـ % 10، وصغّر العدد بـ / 10، ودع التكرار يجمع الباقي.",
+  concept: '<p>مُعامِلان في C# يقومان بهذا العمل:</p>' +
+    '<ul><li><code>n % 10</code> ← <b>الرقم الأخير</b> (باقي القسمة على 10).</li>' +
+    '<li><code>n / 10</code> ← العدد <b>دون</b> رقمه الأخير (القسمة الصحيحة تحذف الكسر).</li></ul>' +
+    '<p><code>DigitSum(527)</code> = 7 + DigitSum(52) = 7 + 2 + DigitSum(5) = 7 + 2 + 5 + DigitSum(0) = <b>14</b>.</p>' +
+    '<p>لأن العدد يصغر في كل استدعاء، تصل الدالة دائمًا إلى الحالة الأساسية <code>n == 0</code> — حتى مع عدد طويل جدًا.</p>' +
+    '<p>الجزء المثير هو مرحلة العودة: كل إطار يحتفظ برقمه وينتظر مجموع بقية العدد.</p>',
+  code: CODE.digitSum, call: "Console.WriteLine(DigitSum(527));", outLabel: "النتيجة المتوقعة", out: "14",
+  input: { kind: "number", min: 0, max: 999999, def: 527, label: "n" },
+  trace: TRACES.digitSum,
+  teacher: {
+    time: "8 دقائق",
+    ask: "بعد استدعاءين، ما العدد المتبقي للمعالجة؟ وما الذي جُمع حتى الآن؟",
+    expect: "بعد 527 و52 يصبح العدد 5، وقد جُمع 7 + 2، أما 5 فما زال معلّقًا على المكدّس.",
+    mis: "يخلط الطلاب بين / و%. اطلب منهم حساب 527 / 10 و527 % 10 قبل مشاهدة الحركة."
+  },
+  exercises: [
+    { id: "x-l1d-1", type: "text", q: "ماذا تُرجع DigitSum(4321)؟",
+      answers: ["10"], hint: "اجمع الأرقام: 4 + 3 + 2 + 1.",
+      solution: "10", explain: "4 + 3 + 2 + 1 = 10. يستخرج التكرار الأرقام 1 ثم 2 ثم 3 ثم 4 ويصل إلى DigitSum(0) = 0." },
+    { id: "x-l1d-2", type: "mc", q: "ماذا تفعل العبارة n / 10 لعدد صحيح موجب في C#؟",
+      options: ["تقرّب n إلى أقرب عشرة", "تحذف الرقم الأخير، لأن القسمة الصحيحة تحذف الكسر", "تُرجع الرقم الأخير", "تُرجع قيمة عشرية"], answer: 1,
+      hint: "قسمة int على int تبقى int في C#.",
+      solution: "527 / 10 = 52 — يختفي الرقم الأخير.",
+      explain: "تتخلّص القسمة الصحيحة من الجزء الكسري، فالقسمة على 10 تُزيح الأرقام وتُسقط الأخير." },
+    { id: "x-l1d-3", type: "text", q: "ما قيمة DigitSum(0)؟",
+      answers: ["0"], hint: "انظر إلى الحالة الأساسية.",
+      solution: "0", explain: "الشرط 0 == 0 هو الحالة الأساسية، فتُرجع الدالة 0 فورًا." }
+  ]
+},
+{
+  id: "l1e", group: "l1", nav: "هـ · عدّ الأرقام",
+  eyebrow: "الدرس الأول · مثال هـ", title: "عدّ أرقام العدد",
+  minutes: "6 دقائق", topic: "تغيير الحالة الأساسية",
+  lede: "نفس حيلة تصغير العدد، لكن الحالة الأساسية يجب أن تتغيّر وإلا نقص العدد رقمًا واحدًا.",
+  concept: '<p>عدّ الأرقام يستخدم الفكرة نفسها «القسمة على 10»، مع قاعدة توقّف مختلفة: العدد مكوّن من رقم واحد بمجرد أن يصبح <b>أصغر من 10</b>.</p>' +
+    '<p>ولماذا لا نستخدم <code>n == 0</code>؟ لأن الرقم الأخير ما زال يُحتسب. التوقّف عند <code>n &lt; 10</code> يُرجع 1 له، وكل إطار خارجي يضيف واحدًا.</p>' +
+    '<h4>حالة خاصة</h4>' +
+    '<p><code>Digits(0)</code> = 1، لأن <code>0 &lt; 10</code> محقّقة — فالصفر يُكتب برقم واحد. ولهذا بالضبط يعطي الشرط <code>n == 0</code> إجابة خاطئة للصفر.</p>',
+  code: CODE.digits, call: "Console.WriteLine(Digits(1234));", outLabel: "النتيجة المتوقعة", out: "4",
+  input: { kind: "number", min: 0, max: 999999, def: 1234, label: "n" },
+  trace: TRACES.digits,
+  teacher: {
+    time: "7 دقائق",
+    ask: "ماذا تُرجع Digits(0) لو كانت الحالة الأساسية n == 0؟",
+    expect: "ستُرجع 0، وهذا خطأ — فالصفر يتكوّن من رقم واحد.",
+    mis: "ينسخ الطلاب الحالة الأساسية من المثال السابق دون التحقّق. اجعل حالة الصفر صريحة."
+  },
+  exercises: [
+    { id: "x-l1e-1", type: "text", q: "ماذا تُرجع Digits(70000)؟",
+      answers: ["5"], hint: "عُدّ كم مرة يمكنك القسمة على 10 قبل أن يصبح العدد أصغر من 10.",
+      solution: "5", explain: "70000 ← 7000 ← 700 ← 70 ← 7، ثم يتوقف التكرار عند 7 < 10، أي 1 + 1 + 1 + 1 + 1 = 5." },
+    { id: "x-l1e-2", type: "mc", q: "لماذا الحالة الأساسية n < 10 بدل n == 0؟",
+      options: ["لأن الصفر ليس عددًا صحيحًا للأرقام", "لأن العدد المكوّن من رقم واحد يُحتسب رقمًا واحدًا، فيتوقف التكرار عند آخر رقم", "لأن القسمة على 10 تفشل عند الصفر", "لأن C# لا تستطيع مقارنة int بالصفر"], answer: 1,
+      hint: "فكّر في آخر رقم من العدد.",
+      solution: "يجب احتساب الرقم الأخير، لذلك نتوقف عندما يتبقى رقم واحد فقط.",
+      explain: "التوقّف عند n < 10 يحتسب الرقم الأخير ويُرجع 1 له، ولذلك أيضًا Digits(0) = 1." },
+    { id: "x-l1e-3", type: "mc", q: "كم مرة تُستدعى Digits عند Digits(1234)؟",
+      options: ["3", "4", "5", "6"], answer: 2,
+      hint: "1234، 123، 12، 1 — ثم ماذا يحدث عند 1؟",
+      solution: "5 استدعاءات: Digits(1234)، Digits(123)، Digits(12)، Digits(1) — والأخير يعود فورًا.",
+      explain: "كل قسمة تُنتج استدعاءً إضافيًا. أربع قسمات تصل إلى 1، والاستدعاء عند 1 يلبّي الحالة الأساسية، فتُنشأ خمسة أطر." }
+  ]
+}
+];
+EXAMPLES.push(
+{
+  id: "l2a", group: "l2", nav: "أ · أكبر عنصر",
+  eyebrow: "الدرس الثاني · مثال أ", title: "إيجاد أكبر عنصر",
+  minutes: "9 دقائق", topic: "المرور التكراري على مصفوفة",
+  lede: "امشِ في المصفوفة بفهرس، ثم دع الإجابة تصعد عبر المكدّس.",
+  concept: '<p>تُعالَج المصفوفات بوسيط <b>فهرس</b> يسير من اليسار إلى اليمين. التكرار يقوم بالمشي، وتُبنى الإجابة أثناء العودة.</p>' +
+    '<ul><li><b>الحالة الأساسية:</b> عندما <code>index == a.Length - 1</code> يتبقى العنصر الأخير فقط، وهو أكبر عنصر في نطاق من عنصر واحد.</li>' +
+    '<li><b>الحالة التكرارية:</b> اطلب أكبر عنصر في بقية المصفوفة، ثم قارنه بـ <code>a[index]</code>.</li></ul>' +
+    '<p>تحدث المقارنة <b>بعد</b> عودة الاستدعاء الذاتي، فتنتقل القيمة الكبرى صعودًا إطارًا بعد إطار.</p>' +
+    '<h4>احترس</h4>' +
+    '<p><code>a.Length - 1</code> هو آخر فهرس صحيح. استخدام <code>a.Length</code> يقرأ خارج المصفوفة ويُطلق الاستثناء <code>IndexOutOfRangeException</code>.</p>',
+  code: CODE.maximum, call: "int[] a = { 3, 8, 2, 6 };\nConsole.WriteLine(Maximum(a, 0));", outLabel: "النتيجة المتوقعة", out: "8",
+  input: { kind: "array", def: [3, 8, 2, 6] },
+  trace: TRACES.maximum,
+  teacher: {
+    time: "10 دقائق",
+    ask: "أين تحدث المقارنة الحقيقية في الكود — قبل الاستدعاء الذاتي أم بعده؟",
+    expect: "بعده. كل إطار يقارن عنصره مع أكبر عنصر في كل ما يقع على يمينه.",
+    mis: "يتوقّع الطلاب متغيّرًا يحمل القيمة الكبرى كما في الحلقة التكرارية. لا يوجد متغيّر يبقى بين الاستدعاءات — القيمة تنتقل عبر القيم المُعادة."
+  },
+  exercises: [
+    { id: "x-l2a-1", type: "text", q: "للمصفوفة { 9, 4, 11, 2 }، ماذا تُرجع Maximum(a, 0)؟",
+      answers: ["11"], hint: "امسح المصفوفة وابحث عن أكبر قيمة.",
+      solution: "11", explain: "العدد 11 أكبر من 9 و4 و2، والتكرار يعيده إلى الفهرس 0 عبر كل الأطر." },
+    { id: "x-l2a-2", type: "mc", q: "متى تُلبّى الحالة الأساسية؟",
+      options: ["عندما index == 0", "عندما index == a.Length", "عندما index == a.Length - 1", "عندما يكون a[index] أكبر قيمة"], answer: 2,
+      hint: "يجب أن تكون الحالة الأساسية فهرسًا صحيحًا.",
+      solution: "index == a.Length - 1 هو آخر فهرس صحيح.",
+      explain: "العنصر الأخير هو أكبر عنصر في نطاق من عنصر واحد، وهناك يتوقف التكرار. أما a.Length فهو خارج النطاق بمقدار واحد." },
+    { id: "x-l2a-3", type: "mc", q: "ما الخطأ الذي سيحدث لو كانت الحالة الأساسية index == a.Length؟",
+      options: ["StackOverflowException", "IndexOutOfRangeException عند قراءة a[index]", "خطأ في الترجمة", "لا خطأ — ستُرجع 0"], answer: 1,
+      hint: "ما الفهارس المسموحة لمصفوفة طولها 4؟",
+      solution: "الفهارس 0..3 مسموحة، وقراءة a[4] تُطلق IndexOutOfRangeException.",
+      explain: "ستقرأ الحالة الأساسية العنصر a[a.Length] الواقع بعد آخر عنصر." }
+  ]
+},
+{
+  id: "l2b", group: "l2", nav: "ب · أصغر عنصر",
+  eyebrow: "الدرس الثاني · مثال ب", title: "إيجاد أصغر عنصر",
+  minutes: "5 دقائق", topic: "مُعامِل واحد يغيّر كل شيء",
+  lede: "بنية مطابقة لـ Maximum — يتغيّر مُعامِل المقارنة واسم المتغيّر فقط.",
+  concept: '<p>هذه هي <code>Maximum</code> بعد تغيير حرف واحد. المرور والحالة الأساسية وشكل العملية المعلّقة وتفكيك المكدّس كلها متطابقة.</p>' +
+    '<p>تنقلب المقارنة وحدها: <code>a[index] &lt; minRest</code> يُبقي <b>الأصغر</b> من القيمتين.</p>' +
+    '<h4>الدرس المستفاد</h4>' +
+    '<p>متى أتقنت كتابة مرور تكراري، صارت أسئلة كثيرة عن المصفوفة تنويعات صغيرة: غيّر السؤال المطروح عن كل عنصر وعملية الدمج، ويبقى باقي الدالة كما هو.</p>',
+  code: CODE.minimum, call: "int[] a = { 7, 4, 9, 2, 6 };\nConsole.WriteLine(Minimum(a, 0));", outLabel: "النتيجة المتوقعة", out: "2",
+  input: { kind: "array", def: [7, 4, 9, 2, 6] },
+  trace: TRACES.minimum,
+  teacher: {
+    time: "5 دقائق",
+    ask: "سأغيّر حرفًا واحدًا. أي حرف؟",
+    expect: "العلامة > تصبح <. وكل شيء آخر مطابق.",
+    mis: "قد يغيّر الطلاب الحالة الأساسية أيضًا. أكّد أن قاعدة التوقف لا تعتمد على ما نبحث عنه."
+  },
+  exercises: [
+    { id: "x-l2b-1", type: "text", q: "للمصفوفة { 6, 3, 8, 1, 5 }، ماذا تُرجع Minimum(a, 0)؟",
+      answers: ["1"], hint: "ابحث عن أصغر قيمة.",
+      solution: "1", explain: "1 أصغر من 6 و3 و8 و5، فيعود من الحالة الأساسية وينجو في كل مقارنة على طريق العودة." },
+    { id: "x-l2b-2", type: "mc", q: "أي تغيير واحد يحوّل Maximum إلى Minimum؟",
+      options: ["تغيير a.Length - 1 إلى a.Length", "تغيير index + 1 إلى index - 1", "تغيير > إلى <", "تغيير int إلى bool"], answer: 2,
+      hint: "السؤال المطروح عن كل عنصر هو ما يتغيّر فقط.",
+      solution: "a[index] > maxRest تصبح a[index] < minRest.",
+      explain: "يبقى المرور كما هو، وتنعكس فقط المقارنة التي تختار القيمة الناجية." }
+  ]
+},
+{
+  id: "l2c", group: "l2", nav: "ج · عدّ العناصر الزوجية",
+  eyebrow: "الدرس الثاني · مثال ج", title: "عدّ العناصر الزوجية",
+  minutes: "8 دقائق", topic: "العدّ بالتكرار",
+  lede: "يصل الفهرس إلى ما بعد النهاية، ويقرّر كل إطار إن كان سيضيف واحدًا.",
+  concept: '<p>هنا يتجاوز الفهرس العنصر الأخير: الحالة الأساسية هي <code>index == a.Length</code>. عندها لم يتبقَّ شيء لفحصه، فالعدّ يساوي 0.</p>' +
+    '<p>أثناء العودة يطرح كل إطار سؤالًا واحدًا عن <b>عنصره هو</b>: هل <code>a[index] % 2 == 0</code>؟ إن كان نعم يُرجع <code>count + 1</code>، وإلا يُرجع <code>count</code> كما هو.</p>' +
+    '<p>يُزار كل عنصر مرة واحدة بالضبط: مصفوفة طولها n تُنتج n + 1 استدعاء، آخرها الحالة الأساسية.</p>' +
+    '<h4>لاحظ الفرق</h4>' +
+    '<p>يتوقف Maximum وMinimum <b>عند</b> العنصر الأخير (<code>a.Length - 1</code>) لأن العنصر الأخير مرشّح حقيقي. أما العدّ فيجب أن يفحص كل عنصر ثم يتوقف <b>بعد</b> العنصر الأخير.</p>',
+  code: CODE.countEven, call: "int[] a = { 2, 7, 4, 9, 6 };\nConsole.WriteLine(CountEven(a, 0));", outLabel: "النتيجة المتوقعة", out: "3",
+  input: { kind: "array", def: [2, 7, 4, 9, 6] },
+  trace: TRACES.countEven,
+  teacher: {
+    time: "9 دقائق",
+    ask: "لماذا الحالة الأساسية هنا a.Length وليست a.Length - 1؟",
+    expect: "لأن كل عنصر — بما فيه الأخير — يجب اختباره، لذلك نتوقف بعد تجاوز النهاية فقط.",
+    mis: "ينسخ الطلاب الحالة الأساسية من Maximum. اسألهم ماذا سيحدث للعنصر الأخير لو استخدمنا index == a.Length - 1: لن يُحتسب أبدًا."
+  },
+  exercises: [
+    { id: "x-l2c-1", type: "text", q: "للمصفوفة { 2, 5, 8, 7, 10, 3 }، ماذا تُرجع CountEven(a, 0)؟",
+      answers: ["3"], hint: "الأعداد 2 و8 و10 زوجية.",
+      solution: "3", explain: "العناصر الزوجية هي 2 و8 و10، فيضيف كل إطار من هذه الأطر واحدًا وتضيف الأطر الفردية صفرًا." },
+    { id: "x-l2c-2", type: "mc", q: "ماذا يُرجع الإطار عندما يكون a[index] فرديًا؟",
+      options: ["0", "count دون تغيير", "count + 1", "-1"], answer: 1,
+      hint: "انظر إلى السطر الأخير من الدالة.",
+      solution: "return count; — تمرّ القيمة العائدة من بقية المصفوفة كما هي.",
+      explain: "لا تُحتسب العناصر الفردية، فيُرجع الإطار ما أنتجه الاستدعاء الأعمق." },
+    { id: "x-l2c-3", type: "mc", q: "كم استدعاءً تُجري CountEven لمصفوفة طولها 5؟",
+      options: ["4", "5", "6", "1"], answer: 2,
+      hint: "الفهارس 0،1،2،3،4 عناصر حقيقية — ثم استدعاء إضافي يلبّي الحالة الأساسية.",
+      solution: "6 استدعاءات: الفهارس 0 إلى 4، ثم الفهرس 5 حيث تُلبّى الحالة الأساسية.",
+      explain: "تُستدعى الدالة مرة لكل عنصر زائد استدعاء أخير عند index == a.Length." }
+  ]
+},
+{
+  id: "l2d", group: "l2", nav: "د · البحث عن قيمة",
+  eyebrow: "الدرس الثاني · مثال د", title: "البحث عن عنصر",
+  minutes: "8 دقائق", topic: "الخروج المبكر · إرجاع bool",
+  lede: "حالتان أساسيتان، وإحداهما قد تُنهي البحث قبل نهاية المصفوفة.",
+  concept: '<p>للبحث التكراري <b>حالتان أساسيتان</b>:</p>' +
+    '<ul><li><code>index == a.Length</code> ← نفدت العناصر، فالإجابة <code>false</code>.</li>' +
+    '<li><code>a[index] == x</code> ← وجدناه، فالإجابة <code>true</code>.</li></ul>' +
+    '<p>الثانية قد تُلبّى مبكرًا. فإذا كانت القيمة المطلوبة عند الفهرس 2، فلن يصل التكرار إلى الفهرس 3 — يبقى المكدّس قصيرًا وتصعد القيمة <code>true</code> مباشرة.</p>' +
+    '<h4>لماذا الترتيب مهم؟</h4>' +
+    '<p>يجب أن يأتي فحص الفهرس <b>أولًا</b>. لو قرأنا <code>a[index]</code> قبل فحص الفهرس لقرأنا خارج المصفوفة وأُطلق استثناء.</p>',
+  code: CODE.contains, call: "int[] a = { 4, 1, 7, 3 };\nConsole.WriteLine(Contains(a, 0, 7));  // True\nConsole.WriteLine(Contains(a, 0, 9));  // False", outLabel: "النتائج المتوقعة", out: "True  /  False",
+  input: { kind: "array", def: [4, 1, 7, 3], target: 7 },
+  trace: TRACES.contains,
+  teacher: {
+    time: "9 دقائق",
+    ask: "كم إطارًا نُنشئ عند البحث عن 9 في { 4, 1, 7, 3 }؟",
+    expect: "خمسة — الفهارس 0، 1، 2، 3 ثم الاستدعاء الأخير عند الفهرس 4 حيث تُلبّى الحالة الأساسية.",
+    mis: "ينسى الطلاب الحالة الأساسية الثانية. بدونها يستمر التكرار بعد العثور على التطابق."
+  },
+  exercises: [
+    { id: "x-l2d-1", type: "mc", q: "إذا كانت a = { 4, 1, 7, 3 }، ماذا تُرجع Contains(a, 0, 7)؟",
+      options: ["False", "True", "3", "7"], answer: 1,
+      hint: "هل تظهر القيمة 7 في المصفوفة؟",
+      solution: "True", explain: "تقارن الدالة كل عنصر مع 7 وتُرجع true بمجرد أن يصبح a[2] == 7." },
+    { id: "x-l2d-2", type: "text", q: "كم استدعاءً تُجري Contains(a, 0, 9) إذا كانت a = { 4, 1, 7, 3 }؟",
+      answers: ["5"], hint: "الفهارس 0، 1، 2، 3، ثم فحص تجاوز النهاية.",
+      solution: "5 استدعاءات — أربع مقارنات زائد الاستدعاء الأخير حيث index == a.Length.",
+      explain: "لا شيء يطابق، فتُختبر كل الفهارس: 0، 1، 2، 3 ثم يلبّي الفهرس 4 الحالة الأساسية ويُرجع false." },
+    { id: "x-l2d-3", type: "mc", q: "لماذا يجب فحص الفهرس قبل قراءة a[index]؟",
+      options: ["لأن قراءة a.Length مكلفة", "لأن قراءة a[index] عند index == a.Length تُطلق IndexOutOfRangeException", "لأن القيمة المطلوبة قد تكون سالبة", "لا فرق على الإطلاق"], answer: 1,
+      hint: "ما الفهارس الصحيحة لمصفوفة طولها 4؟",
+      solution: "احمِ القراءة: if (index == a.Length) return false; تأتي أولًا.",
+      explain: "يوقف هذا الحارس التكرار قبل أن يلمس فهرسًا غير موجود." }
+  ]
+}
+);
+var INTRO_HTML = [
+'<div class="hero">',
+'  <div class="hero-copy">',
+'    <div class="eyebrow"><span class="dot"></span>دورة تفاعلية · الصف الحادي عشر</div>',
+'    <h2>الاستدعاء الذاتي في&nbsp;C#</h2>',
+'    <p class="lede">الدالة التي تستدعي نفسها تبدو كالسحر حتى ترى مكدّس الاستدعاء. كل مثال في هذه الدورة يعمل كتتبّع حقيقي خطوة بخطوة يمكنك إيقافه وإرجاعه وفحصه سطرًا بسطر، بلغة C#.</p>',
+'    <div class="hero-actions">',
+'      <button class="btn primary" data-nav="next">ابدأ الدرس الأول ←</button>',
+'      <button class="btn soft" data-present-toggle>وضع العرض التقديمي</button>',
+'    </div>',
+'    <ul class="hero-stats">',
+'      <li><b>2</b>درسان · 45 دقيقة لكل درس</li>',
+'      <li><b>9</b>أمثلة متحركة</li>',
+'      <li><b>36</b>سؤالًا</li>',
+'      <li><b>100%</b>دون اتصال</li>',
+'    </ul>',
+'  </div>',
+'  <div class="hero-art">',
+'    <svg viewBox="0 0 250 250" width="100%" height="auto" role="img" aria-label="رسم لمكدّس استدعاء فيه أربعة أطر متراكبة وإطار الحالة الأساسية مبرز">',
+'      <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>',
+'      <rect x="46" y="24" width="158" height="34" rx="9" fill="rgba(59,130,246,.18)" stroke="#60a5fa" stroke-width="1.5"/>',
+'      <text x="125" y="46" fill="#dbeafe" font-family="monospace" font-size="13" text-anchor="middle">Sum(3)</text>',
+'      <rect x="58" y="66" width="158" height="34" rx="9" fill="rgba(59,130,246,.18)" stroke="#60a5fa" stroke-width="1.5"/>',
+'      <text x="137" y="88" fill="#dbeafe" font-family="monospace" font-size="13" text-anchor="middle">Sum(2)</text>',
+'      <rect x="70" y="108" width="158" height="34" rx="9" fill="rgba(59,130,246,.18)" stroke="#60a5fa" stroke-width="1.5"/>',
+'      <text x="149" y="130" fill="#dbeafe" font-family="monospace" font-size="13" text-anchor="middle">Sum(1)</text>',
+'      <rect x="82" y="150" width="158" height="38" rx="9" fill="rgba(139,92,246,.32)" stroke="#a78bfa" stroke-width="1.8"/>',
+'      <text x="161" y="168" fill="#f3e8ff" font-family="monospace" font-size="13" text-anchor="middle">Sum(0)</text>',
+'      <text x="161" y="181" fill="#c4b5fd" font-family="sans-serif" font-size="9" text-anchor="middle">الحالة الأساسية</text>',
+'      <path d="M120 194v18" stroke="#22d3ee" stroke-width="2" stroke-dasharray="4 4"/>',
+'      <path d="M120 216l-5-7h10z" fill="#22d3ee"/>',
+'      <text x="125" y="238" fill="#7dd3fc" font-family="monospace" font-size="12" text-anchor="middle">return 0</text>',
+'    </svg>',
+'  </div>',
+'</div>',
+'<div class="grid2">',
+'  <article class="card"><h3>ما هو الاستدعاء الذاتي</h3><p>الاستدعاء الذاتي هو أن تحلّ الدالة مسألة عبر استدعاء <b>نفسها</b> على نسخة أصغر من المسألة نفسها. فبدل أن تدور على العمل بحلقة، تفوّض جزءًا صغيرًا وتترك الباقي لنسخة أخرى من نفسها.</p><p>في C# الدالة التكرارية دالة <code>static</code> عادية — لا شيء خاص في الصياغة. ما يجعلها تكرارية هو الاستدعاء الواقع داخل جسمها.</p></article>',
+'  <article class="card"><h3>القاعدتان</h3><ul class="list-check">',
+'    <li><svg class="tick-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><b>حالة أساسية.</b> شرط تُجيب عنده الدالة مباشرة دون أن تستدعي نفسها. بدونها لا يتوقف التكرار أبدًا.</span></li>',
+'    <li><svg class="tick-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><b>تقدّم.</b> يجب أن يقترب كل استدعاء من الحالة الأساسية — عادةً بعدد أصغر (<code>n - 1</code>، <code>n / 10</code>) أو فهرس أكبر (<code>index + 1</code>).</span></li>',
+'  </ul></article>',
+'  <article class="card"><h3>مكدّس الاستدعاء</h3><p>كل استدعاء يُنشئ <b>إطارًا</b> يحتفظ بوسائطه وبموضعه في الكود. تتراكم الأطر أثناء نزول التكرار، ثم تختفي واحدًا بعد الآخر عند الوصول إلى الحالة الأساسية وعودة القيم.</p><p>ولهذا يهمّ ترتيب العبارات: كل ما يُكتب <em>بعد</em> استدعاء ذاتي يُنفَّذ في مرحلة العودة.</p></article>',
+'  <article class="card"><h3>كيف تستخدم هذا الموقع</h3><ul class="list-check">',
+'    <li><svg class="tick-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>اقرأ كود C# أولًا، سطرًا سطرًا وبصوت مسموع.</span></li>',
+'    <li><svg class="tick-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>اضغط <b>تشغيل</b> وراقب المكدّس ينمو ثم يتفكّك.</span></li>',
+'    <li><svg class="tick-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>غيّر المدخل وتوقّع الإجابة قبل الضغط على تشغيل.</span></li>',
+'    <li><svg class="tick-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>أجب عن الأسئلة في نهاية كل قسم. يُحفظ تقدّمك تلقائيًا.</span></li>',
+'  </ul></article>',
+'</div>',
+'<div class="grid2">',
+'  <article class="card lesson-card"><span class="num">الدرس الأول · 45 دقيقة</span><h3>الاستدعاء الذاتي مع الأعداد</h3><p>ترتيب الطباعة، والمجموع من 1 إلى n، ومجموع الأرقام، وعدّ الأرقام — الأشكال الأربعة التي تُبنى عليها كل الأمثلة اللاحقة.</p><ul class="sched">',
+'    <li><b>0–5</b><span>مدخل: كيف تبدو دالة تستدعي نفسها.</span></li>',
+'    <li><b>5–15</b><span>المثالان أ و ب — الطباعة قبل الاستدعاء وبعده.</span></li>',
+'    <li><b>15–25</b><span>المثال ج — المجموع من 1 إلى n.</span></li>',
+'    <li><b>25–33</b><span>المثال د — مجموع الأرقام.</span></li>',
+'    <li><b>33–40</b><span>المثال هـ — عدّ الأرقام.</span></li>',
+'    <li><b>40–45</b><span>أسئلة تدريبية وتذكرة خروج.</span></li>',
+'  </ul></article>',
+'  <article class="card lesson-card"><span class="num">الدرس الثاني · 45 دقيقة</span><h3>الاستدعاء الذاتي مع المصفوفات</h3><p>المرور على المصفوفة بفهرس، ثم دمج النتائج أثناء العودة: الأكبر، والأصغر، والعدّ، والبحث.</p><ul class="sched">',
+'    <li><b>0–5</b><span>مراجعة: القاعدتان ومكدّس الاستدعاء.</span></li>',
+'    <li><b>5–15</b><span>المثال أ — أكبر عنصر.</span></li>',
+'    <li><b>15–22</b><span>المثال ب — أصغر عنصر.</span></li>',
+'    <li><b>22–32</b><span>المثال ج — عدّ العناصر الزوجية.</span></li>',
+'    <li><b>32–40</b><span>المثال د — البحث عن قيمة.</span></li>',
+'    <li><b>40–45</b><span>التقييم النهائي.</span></li>',
+'  </ul></article>',
+'</div>',
+'<div class="card" style="margin-top:18px"><h3>ملاحظة حول المحاكي</h3><p>الحركات في هذا الموقع ينتجها <b>محاكٍ تعليمي</b> كُتب خصيصًا لهذه الدورة، وليس مترجم C#. كل تتبّع يتبع التنفيذ الفعلي لكود C# الظاهر إلى جانبه، وقد تم التحقّق من كل نتيجة مقابل ما ينتجه .NET — لكن الموقع لا يترجم ما تكتبه. المدخلات القابلة للتغيير هي مدخلات الأمثلة المحلولة فقط.</p><button class="btn soft sm" type="button" data-read>ضع علامة على المقدمة كمقروءة</button></div>'
+].join("\n");
+
+/* ---------------- final assessment ---------------- */
+var QUIZ = [
+  { q: "أي مما يلي حالة أساسية صحيحة للدالة <code>static int Sum(int n)</code> التي تجمع 1..n؟",
+    options: ["if (n == 0) return 0;", "if (n > 0) return n;", "if (n == 0) return 1;", "return n + Sum(n - 1);"], answer: 0,
+    topic: "الحالات الأساسية", section: "l1c",
+    explain: "مجموع نطاق فارغ يساوي 0، والنقطة n == 0 هي التي لا نحتاج بعدها إلى استدعاءات أخرى." },
+  { q: "تشغيل المثال أ بالقيمة <code>Print(3)</code> يُنتج:",
+    options: ["1 2 3", "3 2 1", "3 2 1 0", "0 1 2 3"], answer: 1,
+    topic: "ترتيب الطباعة", section: "l1a",
+    explain: "تحدث الطباعة قبل الاستدعاء، فيطبع كل إطار قيمته أثناء النزول: 3 ثم 2 ثم 1." },
+  { q: "تشغيل المثال ب بالقيمة <code>Print(3)</code> يُنتج:",
+    options: ["3 2 1", "1 2 3", "3 2 1 0", "0 1 2 3"], answer: 1,
+    topic: "ترتيب الطباعة", section: "l1b",
+    explain: "تحدث الطباعة بعد الاستدعاء، فيطبع الإطار الأعمق أولًا وتعود الأعداد تصاعديًا." },
+  { q: "ماذا تُرجع <code>Sum(5)</code>؟",
+    options: ["10", "15", "20", "5"], answer: 1,
+    topic: "المجموع من 1 إلى n", section: "l1c",
+    explain: "1 + 2 + 3 + 4 + 5 = 15، وتضيف الأطر أثناء العودة 1 ثم 3 ثم 6 ثم 10 ثم 15." },
+  { q: "ماذا تُرجع <code>DigitSum(482)</code>؟",
+    options: ["12", "14", "48", "8"], answer: 1,
+    topic: "مجموع الأرقام", section: "l1d",
+    explain: "4 + 8 + 2 = 14. فـ DigitSum(482) = 2 + DigitSum(48) = 2 + 8 + DigitSum(4) = 2 + 8 + 4 + 0." },
+  { q: "ماذا تُرجع <code>Digits(90210)</code>؟",
+    options: ["4", "5", "6", "90210"], answer: 1,
+    topic: "عدد الأرقام", section: "l1e",
+    explain: "العدد 90210 يتكوّن من خمسة أرقام، وكل قسمة على 10 تحذف رقمًا، ويتوقف التكرار عندما تصبح القيمة أصغر من 10." },
+  { q: "إذا كانت <code>int[] a = { 5, 12, 7, 3 }</code>، ماذا تُرجع <code>Maximum(a, 0)</code>؟",
+    options: ["5", "7", "12", "3"], answer: 2,
+    topic: "الأكبر في مصفوفة", section: "l2a",
+    explain: "تُرجع الحالة الأساسية 3، ثم يتفوّق 7 على 3، ثم يتفوّق 12 على 7، وتخسر 5 أمام 12 — فيعود 12 إلى القمة." },
+  { q: "إذا كانت <code>int[] a = { 8, 3, 11, 4 }</code>، ماذا تُرجع <code>Minimum(a, 0)</code>؟",
+    options: ["3", "4", "8", "11"], answer: 0,
+    topic: "الأصغر في مصفوفة", section: "l2b",
+    explain: "4 ثم يبقى 4 أمام 11، ثم يتفوّق 3 على 4، وتخسر 8 أمام 3. أصغر قيمة، 3، تعود إلى القمة." },
+  { q: "إذا كانت <code>int[] a = { 1, 2, 4, 7, 8 }</code>، ماذا تُرجع <code>CountEven(a, 0)</code>؟",
+    options: ["2", "3", "4", "5"], answer: 1,
+    topic: "عدّ العناصر الزوجية", section: "l2c",
+    explain: "الأعداد 2 و4 و8 زوجية، فتُرجع ثلاثة أطر القيمة count + 1 بينما تُرجع أطر 1 و7 القيمة كما هي." },
+  { q: "إذا كانت <code>int[] a = { 4, 1, 7, 3 }</code>، ماذا تُرجع <code>Contains(a, 0, 9)</code>؟",
+    options: ["True", "False", "3", "يُطلق استثناء"], answer: 1,
+    topic: "البحث عن قيمة", section: "l2d",
+    explain: "لا يوجد عنصر يساوي 9، فيصل الفهرس إلى a.Length وتُرجع الحالة الأساسية false." },
+  { q: "كم إطارًا على مكدّس الاستدعاء في اللحظة التي تُنفَّذ فيها <code>Sum(0)</code> إذا كان الاستدعاء الأصلي <code>Sum(4)</code>؟",
+    options: ["1", "4", "5", "10"], answer: 2,
+    topic: "مكدّس الاستدعاء ومرحلة العودة", section: "l1c",
+    explain: "الأطر Sum(4) وSum(3) وSum(2) وSum(1) في انتظار بينما تُنفَّذ Sum(0) — خمسة أطر في المجموع." },
+  { q: "ماذا يحدث لدالة تكرارية بلا حالة أساسية، أو باستدعاء لا يقترب أبدًا من حالة أساسية؟",
+    options: ["تُرجع 0 بعد دورة واحدة", "توقفها C# بعد 100 استدعاء", "يستمر المكدّس في النمو حتى يُطلق وقت التنفيذ StackOverflowException", "تعمل كحلقة تكرارية بدلًا من ذلك"], answer: 2,
+    topic: "مكدّس الاستدعاء ومرحلة العودة", section: "l1a",
+    explain: "كل استدعاء يحتاج إطارًا على المكدّس. وبلا حالة أساسية لا تتوقف الأطر عن التراكم، فيُنهي وقت التنفيذ العملية بخطأ StackOverflowException." }
+];
+/* ============================================================
+   Progress storage (graceful fallback when unavailable)
+   ============================================================ */
+var STORE_KEY = "csharp-recursion-progress-ar-v1";
+var store = (function () {
+  var s = { solved: {}, read: {}, quiz: null };
+  try {
+    var raw = window.localStorage.getItem(STORE_KEY);
+    if (raw) {
+      var p = JSON.parse(raw);
+      if (p && typeof p === "object") {
+        s.solved = p.solved || {}; s.read = p.read || {}; s.quiz = p.quiz || null;
+      }
+    }
+  } catch (e) { /* storage unavailable — progress stays in memory */ }
+  return s;
+})();
+function persist() {
+  try { window.localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+}
+
+/* ============================================================
+   Views
+   ============================================================ */
+var VIEWS = [];
+var VIZ = {};
+var current = "intro";
+var LETTERS = ["أ", "ب", "ج", "د"];
+
+function tickSVG() {
+  return '<svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+}
+
+function pagerHTML(id) {
+  var i = VIEWS.map(function (v) { return v.id; }).indexOf(id);
+  var prev = VIEWS[i - 1], next = VIEWS[i + 1];
+  return '<div class="pager">' +
+    '<button class="btn ghost" data-nav="prev"' + (prev ? "" : " disabled") + ">→ " + (prev ? prev.nav : "البداية") + "</button>" +
+    '<button class="btn primary" data-nav="next"' + (next ? "" : " disabled") + ">" + (next ? next.nav : "نهاية الدورة") + " ←</button>" +
+    "</div>";
+}
+
+function sectionHTML(sec) {
+  var lines = sec.code.split("\n");
+  return '<div class="view-head">' +
+    '<div class="eyebrow"><span class="dot"></span>' + sec.eyebrow + "</div>" +
+    "<h2>" + sec.title + "</h2>" +
+    '<p class="lede">' + sec.lede + "</p>" +
+    '<div class="meta-row"><span class="chip">⏱ ' + sec.minutes + '</span><span class="chip">C# · ' + sec.topic + "</span></div>" +
+    "</div>" +
+    '<div class="layout"><div class="col">' +
+      '<article class="card concept"><h3>كيف تعمل</h3>' + sec.concept + "</article>" +
+      '<article class="card"><div class="card-top"><h3>كود C#</h3><span class="tag">C#</span></div>' +
+        '<div class="code">' + codePanel(lines) + "</div>" +
+        '<div class="code-foot"><span>دالة static · C# 7 أو أحدث</span><span>اقرأها من أعلى إلى أسفل</span></div></article>' +
+      '<article class="card"><div class="card-top"><h3>المثال</h3><span class="tag" style="background:#eef4ff;color:#1d4ed8">تشغيل</span></div>' +
+        '<div class="code mini" style="padding:10px 14px;white-space:pre;margin-bottom:11px">' + highlight(sec.call) + "</div>" +
+        '<div class="kv"><span class="lbl">' + sec.outLabel + '</span><span class="out-chip">' + esc(sec.out) + "</span></div></article>" +
+      '<details class="teacher"><summary>ملاحظات المعلم · ' + sec.teacher.time + "</summary>" +
+        '<div class="t-body">' +
+          '<div class="t-row"><b>التوقيت المقترح</b>' + sec.teacher.time + "</div>" +
+          '<div class="t-row"><b>اسأل الصف</b>' + sec.teacher.ask + "</div>" +
+          '<div class="t-row"><b>الإجابة المتوقعة</b>' + sec.teacher.expect + "</div>" +
+          '<div class="t-row"><b>الخطأ الشائع</b>' + sec.teacher.mis + "</div>" +
+        "</div></details>" +
+    "</div>" +
+    '<div class="col viz-col"><div class="viz" data-viz></div></div></div>' +
+    '<div class="exs" data-exs></div>' +
+    pagerHTML(sec.id);
+}
+
+VIEWS.push({
+  id: "intro", group: "start", nav: "ابدأ من هنا",
+  html: function () { return INTRO_HTML + pagerHTML("intro"); },
+  mount: function (root) {
+    var b = $("[data-read]", root);
+    if (b) {
+      if (store.read.intro) { b.textContent = "✓ مقروء"; b.disabled = true; }
+      b.addEventListener("click", function () {
+        store.read.intro = true; persist(); updateProgress();
+        b.textContent = "✓ مقروء"; b.disabled = true;
+      });
+    }
+  }
+});
+
+EXAMPLES.forEach(function (sec) {
+  VIEWS.push({
+    id: sec.id, group: sec.group, nav: sec.nav, exercises: sec.exercises,
+    html: function () { return sectionHTML(sec); },
+    mount: function (root) {
+      var vizRoot = $("[data-viz]", root);
+      if (vizRoot) VIZ[sec.id] = createViz(vizRoot, sec);
+      mountExercises($("[data-exs]", root), sec);
+    }
+  });
+});
+
+VIEWS.push({
+  id: "final", group: "end", nav: "التقييم النهائي",
+  html: function () { return quizHTML(); },
+  mount: function (root) { mountQuiz(root); }
+});
+
+/* ============================================================
+   Exercises
+   ============================================================ */
+function norm(s) {
+  return String(s).toLowerCase().replace(/\s+/g, " ").trim().replace(/^["'«»]|["'«»]$/g, "").replace(/[.،]$/, "");
+}
+
+function markSolved(id) {
+  if (store.solved[id]) return;
+  store.solved[id] = true; persist(); updateProgress();
+}
+
+function buildExercise(ex, i) {
+  var el = document.createElement("div");
+  el.className = "ex";
+  var selected = null;
+  var optionsHTML = ex.type === "mc"
+    ? '<div class="opts">' + ex.options.map(function (o, j) {
+        return '<button class="opt" type="button" data-i="' + j + '"><span class="key">' + LETTERS[j] + "</span><span>" + o + "</span></button>";
+      }).join("") + "</div>"
+    : '<div class="ans-input"><input type="text" autocomplete="off" placeholder="اكتب إجابتك…" aria-label="إجابتك"></div>';
+
+  el.innerHTML =
+    '<div class="ex-top"><span class="ex-kind">' + (ex.type === "mc" ? "اختيار من متعدد" : "إجابة قصيرة") + '</span><span class="ex-num">س' + (i + 1) + "</span></div>" +
+    '<p class="ex-q">' + ex.q + "</p>" + optionsHTML +
+    '<div class="ex-actions">' +
+      '<button class="btn primary sm" type="button" data-a="submit">تحقّق من الإجابة</button>' +
+      '<button class="btn ghost sm" type="button" data-a="retry" disabled>حاول مجددًا</button>' +
+      '<button class="btn ghost sm" type="button" data-a="hint">تلميح</button>' +
+      '<button class="btn ghost sm" type="button" data-a="solution">اعرض الحل</button>' +
+    "</div>" +
+    '<div class="fb"></div>';
+
+  var fb = $(".fb", el);
+  var submit = $('[data-a="submit"]', el);
+  var retry = $('[data-a="retry"]', el);
+  var input = $("input[type=text]", el);
+
+  function say(kind, html) { fb.className = "fb show " + kind; fb.innerHTML = html; }
+
+  if (ex.type === "mc") {
+    $$(".opt", el).forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        if (el.dataset.done === "1") return;
+        selected = Number(btn.dataset.i);
+        $$(".opt", el).forEach(function (b) { b.classList.remove("sel"); });
+        btn.classList.add("sel");
+      });
+    });
+  }
+
+  function lock() {
+    el.dataset.done = "1"; submit.disabled = true; retry.disabled = false;
+    $$(".opt", el).forEach(function (b) { b.disabled = true; });
+    if (input) input.disabled = true;
+  }
+
+  function reset() {
+    el.dataset.done = "0"; submit.disabled = false; retry.disabled = true;
+    selected = null; fb.className = "fb"; fb.innerHTML = "";
+    $$(".opt", el).forEach(function (b) { b.disabled = false; b.classList.remove("sel", "correct", "wrong"); });
+    if (input) { input.disabled = false; input.value = ""; input.style.borderColor = ""; }
+  }
+
+  submit.addEventListener("click", function () {
+    var ok = false;
+    if (ex.type === "mc") {
+      if (selected === null) { say("note", "اختر أحد الخيارات أولًا."); return; }
+      ok = selected === ex.answer;
+      $$(".opt", el).forEach(function (b, j) {
+        if (j === ex.answer) b.classList.add("correct");
+        else if (j === selected) b.classList.add("wrong");
+      });
+    } else {
+      var v = norm(input.value);
+      if (!v) { say("note", "اكتب إجابة أولًا."); return; }
+      ok = ex.answers.some(function (a) { return norm(a) === v; });
+      input.style.borderColor = ok ? "#10b981" : "#e11d48";
+    }
+    if (ok) { say("ok", "<b>صحيح.</b> " + ex.explain); markSolved(ex.id); }
+    else { say("no", "<b>ليس تمامًا.</b> جرّب التلميح، أو تابع الحركة خطوة بخطوة، أو افتح الحل النموذجي."); }
+    lock();
+  });
+
+  if (input) {
+    input.addEventListener("keydown", function (e) { if (e.key === "Enter") submit.click(); });
+  }
+  retry.addEventListener("click", reset);
+  $('[data-a="hint"]', el).addEventListener("click", function () { say("hint", "<b>تلميح.</b> " + ex.hint); });
+  $('[data-a="solution"]', el).addEventListener("click", function () {
+    say("sol", "<b>الحل النموذجي.</b><pre>" + esc(ex.solution) + "</pre>");
+  });
+
+  if (store.solved[ex.id]) {
+    say("ok", "<b>سبق حلّه.</b> " + ex.explain);
+    if (ex.type === "mc") { $$(".opt", el).forEach(function (b, j) { b.classList.add(j === ex.answer ? "correct" : "wrong"); }); }
+    if (input) { input.value = ex.answers[0]; input.style.borderColor = "#10b981"; }
+    lock();
+  }
+  return el;
+}
+
+function mountExercises(host, sec) {
+  if (!host) return;
+  host.innerHTML = '<div class="exs-head">تحقّق من فهمك<span style="color:#c3cde0">·</span>' + sec.exercises.length + " أسئلة</div>";
+  sec.exercises.forEach(function (ex, i) { host.appendChild(buildExercise(ex, i)); });
+}
+/* ============================================================
+   The recursion visualizer
+   ============================================================ */
+function createViz(root, sec) {
+  var lines = sec.code.split("\n");
+  var cfg = sec.input;
+  var st = {
+    frames: [], i: 0, timer: null, playing: false, speed: 1,
+    input: !cfg ? null : (cfg.kind === "number" ? { n: cfg.def } : { arr: cfg.def.slice(), x: cfg.target })
+  };
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) st.speed = 1.5;
+
+  root.innerHTML =
+    '<div class="viz-head"><span class="viz-tag">تتبّع التنفيذ</span><span class="viz-count">خطوة 0 / 0</span></div>' +
+    (cfg ? '<div class="vz-input"></div>' : "") +
+    '<div class="vz-main"><div class="code vz-code">' + codePanel(lines) + "</div>" +
+      '<div><span class="panel-label">مكدّس الاستدعاء</span><div class="vz-stack stack"></div></div></div>' +
+    (cfg && cfg.kind === "array" ? '<div><span class="panel-label">المصفوفة · الفهرس أعلى والقيمة أسفل</span><div class="cells vz-cells"></div></div>' : "") +
+    '<div class="note-box"><span class="panel-label">الخطوة</span><p class="vz-note">اضغط «تشغيل» للبدء.</p></div>' +
+    '<div class="vz-lower"><div class="out-box"><span class="panel-label">المخرجات</span><pre class="vz-out">—</pre></div>' +
+      '<div class="res-box"><span class="panel-label">النتيجة</span><span class="val vz-res">—</span></div></div>' +
+    '<div class="vz-controls">' +
+      '<button class="btn sm" type="button" data-a="reset" title="إعادة">↺</button>' +
+      '<button class="btn sm" type="button" data-a="back" title="خطوة للخلف">◀</button>' +
+      '<button class="btn primary sm" type="button" data-a="play">▶ تشغيل</button>' +
+      '<button class="btn sm" type="button" data-a="fwd" title="خطوة للأمام">▶❙</button>' +
+      '<input class="vz-scrub" type="range" min="0" max="0" value="0" aria-label="موضع التتبّع">' +
+      '<select class="speed" aria-label="سرعة الحركة"><option value="0.5">0.5×</option><option value="1">1×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="3">3×</option></select>' +
+    "</div>";
+
+  var codeEl = $(".vz-code", root), stackEl = $(".vz-stack", root), cellsEl = $(".vz-cells", root);
+  var noteEl = $(".vz-note", root), outEl = $(".vz-out", root), resEl = $(".vz-res", root);
+  var countEl = $(".viz-count", root), scrub = $(".vz-scrub", root);
+  var playBtn = $('[data-a="play"]', root), backBtn = $('[data-a="back"]', root), fwdBtn = $('[data-a="fwd"]', root), resetBtn = $('[data-a="reset"]', root);
+  var speedSel = $(".speed", root);
+  if (speedSel) speedSel.value = String(st.speed);
+
+  /* ---- input controls ---- */
+  if (cfg) buildInput($(".vz-input", root), cfg);
+
+  function buildInput(box, c) {
+    var err;
+    if (c.kind === "number") {
+      box.innerHTML = '<div class="row"><label>' + c.label + " =</label>" +
+        (c.max <= 20 ? '<input type="range" min="' + c.min + '" max="' + c.max + '" step="1" value="' + c.def + '" aria-label="' + c.label + '">' : "") +
+        '<input type="number" min="' + c.min + '" max="' + c.max + '" step="1" value="' + c.def + '" aria-label="' + c.label + '">' +
+        '<span class="hint">أعداد صحيحة ' + c.min + "–" + c.max + "</span></div>" +
+        '<div class="err" role="status"></div>';
+      var num = $("input[type=number]", box), rng = $("input[type=range]", box);
+      err = $(".err", box);
+      function setN(v, from) {
+        var n = parseInt(v, 10);
+        if (isNaN(n)) { err.textContent = "أدخل عددًا صحيحًا."; return; }
+        if (n < c.min || n > c.max) { err.textContent = "أدخل عددًا صحيحًا بين " + c.min + " و" + c.max + "."; return; }
+        err.textContent = "";
+        st.input.n = n;
+        if (from !== "num") num.value = n;
+        if (rng && from !== "range") rng.value = n;
+        rebuild();
+      }
+      num.addEventListener("input", function () { setN(num.value, "num"); });
+      if (rng) rng.addEventListener("input", function () { setN(rng.value, "range"); });
+    } else {
+      box.innerHTML = '<div class="row"><label>a =</label><input type="text" data-in="arr" value="' + c.def.join(", ") + '" aria-label="قيم المصفوفة"></div>' +
+        (c.target !== undefined ? '<div class="row"><label>x =</label><input type="number" step="1" data-in="x" value="' + c.target + '" style="width:82px" aria-label="القيمة المطلوبة"></div>' : "") +
+        '<div class="err" role="status"></div>';
+      var arrIn = $('[data-in="arr"]', box), xIn = $('[data-in="x"]', box);
+      err = $(".err", box);
+      function setArr() {
+        var parts = arrIn.value.split(/[,\s;]+/).filter(function (p) { return p !== ""; });
+        if (!parts.length) { err.textContent = "المصفوفة تحتاج إلى رقم واحد على الأقل."; return; }
+        if (parts.length > 8) { err.textContent = "استخدم 8 عناصر كحد أقصى ليبقى التتبّع واضحًا."; return; }
+        var vals = [];
+        for (var i = 0; i < parts.length; i++) {
+          if (!/^-?\d+$/.test(parts[i])) { err.textContent = "أرقام صحيحة فقط، مفصولة بفواصل."; return; }
+          vals.push(parseInt(parts[i], 10));
+        }
+        err.textContent = "";
+        st.input.arr = vals;
+        rebuild();
+      }
+      arrIn.addEventListener("input", setArr);
+      if (xIn) {
+        xIn.addEventListener("input", function () {
+          var v = parseInt(xIn.value, 10);
+          if (isNaN(v)) { err.textContent = "القيمة المطلوبة يجب أن تكون عددًا صحيحًا."; return; }
+          err.textContent = "";
+          st.input.x = v;
+          rebuild();
+        });
+      }
+    }
+  }
+
+  /* ---- rendering ---- */
+  function frameHTML(fr) {
+    var cls = { CALL: "b-call", WAITING: "b-wait", BASE: "b-base", RETURN: "b-ret" }[fr.state] || "b-wait";
+    var label = { CALL: "استدعاء", WAITING: "انتظار", BASE: "حالة أساسية", RETURN: "عائد" }[fr.state] || fr.state;
+    var args = Object.keys(fr.args).map(function (k) { return k + " = " + fr.args[k]; }).join(" · ");
+    return '<div class="frame s-' + fr.state + '">' +
+      '<div class="frame-top"><code>' + esc(fr.label) + '</code><span class="badge ' + cls + '">' + label + "</span></div>" +
+      (args ? '<div class="frame-args">' + esc(args) + "</div>" : "") +
+      (fr.pending ? '<div class="frame-pend">ينتظر: ' + esc(fr.pending) + "</div>" : "") +
+      (fr.ret !== null && fr.ret !== undefined ? '<div class="frame-ret">أعاد ' + esc(fr.ret) + "</div>" : "") +
+      "</div>";
+  }
+
+  function render() {
+    var f = st.frames[st.i];
+    if (!f) return;
+    $$(".cl", codeEl).forEach(function (n, k) { n.classList.toggle("active", k === f.line); });
+
+    stackEl.innerHTML = f.stack.length ? f.stack.slice().reverse().map(frameHTML).join("") : "";
+    if (f.stack.length === 0) stackEl.innerHTML = '<div style="font-size:11.5px;color:#a8b2c6;padding:6px 2px">المكدّس فارغ — انتهى التنفيذ</div>';
+
+    if (cellsEl) {
+      cellsEl.innerHTML = f.arr.map(function (v, i) {
+        var c = "cell" + (i === f.active ? " active" : "") + (f.match === i ? " match" : "");
+        return '<div class="' + c + '"><div class="ci">' + i + '</div><div class="cv">' + v + "</div></div>";
+      }).join("");
+    }
+
+    noteEl.textContent = f.note;
+    outEl.textContent = f.output ? f.output + " " : "—";
+    resEl.textContent = (f.result === null || f.result === undefined) ? "—" : f.result;
+    countEl.textContent = "خطوة " + (st.i + 1) + " / " + st.frames.length;
+    scrub.max = String(st.frames.length - 1);
+    scrub.value = String(st.i);
+    backBtn.disabled = st.i === 0;
+    resetBtn.disabled = st.i === 0 && !st.playing;
+    fwdBtn.disabled = st.i >= st.frames.length - 1;
+  }
+
+  function rebuild() {
+    st.frames = sec.trace(st.input);
+    st.i = 0;
+    pause();
+    render();
+  }
+
+  /* ---- playback ---- */
+  function tick() {
+    if (!st.playing) return;
+    if (st.i >= st.frames.length - 1) { pause(); return; }
+    st.i++; render();
+    st.timer = setTimeout(tick, 1050 / st.speed);
+  }
+  function play() {
+    if (st.playing) return;
+    if (st.i >= st.frames.length - 1) { st.i = 0; render(); }
+    st.playing = true;
+    playBtn.textContent = "❚❚ إيقاف";
+    playBtn.classList.remove("primary");
+    tick();
+  }
+  function pause() {
+    st.playing = false;
+    clearTimeout(st.timer);
+    playBtn.textContent = "▶ تشغيل";
+    playBtn.classList.add("primary");
+  }
+  function stepTo(n) {
+    pause();
+    st.i = Math.max(0, Math.min(st.frames.length - 1, n));
+    render();
+  }
+
+  playBtn.addEventListener("click", function () { st.playing ? pause() : play(); });
+  backBtn.addEventListener("click", function () { stepTo(st.i - 1); });
+  fwdBtn.addEventListener("click", function () { stepTo(st.i + 1); });
+  resetBtn.addEventListener("click", function () { stepTo(0); });
+  scrub.addEventListener("input", function () { stepTo(parseInt(scrub.value, 10)); });
+  speedSel.addEventListener("change", function () {
+    st.speed = parseFloat(speedSel.value) || 1;
+    if (st.playing) { clearTimeout(st.timer); tick(); }
+  });
+
+  rebuild();
+
+  return {
+    play: play, pause: pause,
+    reset: function () { stepTo(0); },
+    step: function (d) { stepTo(st.i + d); }
+  };
+}
+
+/* ============================================================
+   Final assessment
+   ============================================================ */
+function quizHTML() {
+  var body = QUIZ.map(function (q, i) {
+    return '<div class="q" data-q="' + i + '">' +
+      '<div class="q-head"><span class="q-num">س' + (i + 1) + '</span><span class="q-topic">' + q.topic + "</span></div>" +
+      '<p class="q-text">' + q.q + "</p>" +
+      '<div class="opts">' + q.options.map(function (o, j) {
+        return '<button class="opt" type="button" data-i="' + j + '"><span class="key">' + LETTERS[j] + "</span><span>" + o + "</span></button>";
+      }).join("") + "</div>" +
+      '<div class="q-explain" hidden></div></div>';
+  }).join("");
+
+  return '<div class="view-head">' +
+    '<div class="eyebrow"><span class="dot"></span>الختام</div>' +
+    "<h2>التقييم النهائي</h2>" +
+    '<p class="lede">اثنا عشر سؤالًا تغطي الدرسين. أجب عن جميعها ثم أرسل الإجابات لترى درجتك، وتفسيرًا لكل سؤال، والأقسام التي يُستحسن مراجعتها.</p>' +
+    '<div class="meta-row"><span class="chip">12 سؤالًا</span><span class="chip">بلا حدّ زمني</span><span class="chip">أعد المحاولة كما تشاء</span></div></div>' +
+    '<div class="quiz-wrap">' + body + "</div>" +
+    '<div class="pager" style="border:0;padding-bottom:0"><button class="btn ghost" data-nav="prev">→ الدرس الثاني</button><span id="quizMsg" style="font-size:12.5px;color:#8b96ad;align-self:center"></span><button class="btn primary" type="button" id="submitQuiz">إرسال الإجابات</button></div>' +
+    '<div id="quizResult"></div>';
+}
+
+function mountQuiz(root) {
+  var answers = {};
+  var wrap = root;
+
+  $$(".q", wrap).forEach(function (qEl, qi) {
+    qEl.addEventListener("click", function (e) {
+      var b = e.target.closest(".opt");
+      if (!b || qEl.dataset.locked === "1") return;
+      answers[qi] = Number(b.dataset.i);
+      $$(".opt", qEl).forEach(function (x) { x.classList.remove("sel"); });
+      b.classList.add("sel");
+      var msg = $("#quizMsg", wrap); if (msg) msg.textContent = "";
+    });
+  });
+
+  function submit() {
+    var missing = -1;
+    for (var i = 0; i < QUIZ.length; i++) { if (answers[i] === undefined) { missing = i; break; } }
+    var msg = $("#quizMsg", wrap);
+    if (missing >= 0) {
+      if (msg) msg.textContent = "أجب عن السؤال " + (missing + 1) + " أولًا.";
+      var q = $$(".q", wrap)[missing];
+      if (q) q.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    if (msg) msg.textContent = "";
+
+    var score = 0, weak = {};
+    $$(".q", wrap).forEach(function (qEl, qi) {
+      var q = QUIZ[qi];
+      var ok = answers[qi] === q.answer;
+      if (ok) score++;
+      else {
+        if (!weak[q.section]) weak[q.section] = { topic: q.topic, count: 0 };
+        weak[q.section].count++;
+      }
+      qEl.dataset.locked = "1";
+      qEl.classList.add(ok ? "review-ok" : "review-no");
+      $$(".opt", qEl).forEach(function (b, j) {
+        b.classList.remove("sel");
+        b.disabled = true;
+        if (j === q.answer) b.classList.add("correct");
+        else if (j === answers[qi]) b.classList.add("wrong");
+      });
+      var ex = $(".q-explain", qEl);
+      ex.hidden = false;
+      ex.innerHTML = "<b>" + (ok ? "إجابة صحيحة." : "الإجابة هي " + LETTERS[q.answer] + ".") + "</b> " + q.explain;
+    });
+
+    var pct = Math.round((score / QUIZ.length) * 100);
+    var line = pct >= 90 ? "ممتاز — تقرأ الاستدعاء الذاتي بطلاقة."
+      : pct >= 70 ? "عمل جيد. موضوع أو موضوعان يستحقّان نظرة أخرى."
+      : pct >= 50 ? "أنت على الطريق — راجع الأقسام المبرزة وأعد تشغيل الحركات."
+      : "ابدأ من الدرس الأول وتابع كل تتبّع ببطء.";
+
+    var recos = Object.keys(weak).map(function (sid) {
+      var v = VIEWS.filter(function (x) { return x.id === sid; })[0];
+      return '<div class="reco-item"><span><b>' + weak[sid].topic + "</b> · " + weak[sid].count +
+        " سؤالًا للمراجعة</span><a class=\"btn sm soft\" href=\"#" + sid + "\">" + (v ? v.nav : "مراجعة") + "</a></div>";
+    }).join("");
+
+    $("#quizResult", wrap).innerHTML =
+      '<div class="score-card"><div class="big">' + score + " / " + QUIZ.length + "</div><p>" + pct + "% · " + line + "</p>" +
+      '<div class="reco">' + (recos || '<div class="reco-item"><span>أُجيب عن كل المواضيع بشكل صحيح — لا شيء للمراجعة.</span></div>') + "</div></div>" +
+      '<div class="pager" style="border-color:rgba(255,255,255,.18)"><button class="btn" type="button" id="retakeQuiz">↺ أعد الاختبار</button><button class="btn primary" data-nav="prev">→ راجع الدرس الثاني</button></div>';
+
+    var retake = $("#retakeQuiz", wrap);
+    if (retake) {
+      retake.addEventListener("click", function () {
+        wrap.innerHTML = quizHTML();
+        mountQuiz(wrap);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
+
+    store.read.final = true;
+    store.quiz = { score: score, total: QUIZ.length };
+    persist();
+    updateProgress();
+    $("#quizResult", wrap).scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  var btn = $("#submitQuiz", wrap);
+  if (btn) btn.addEventListener("click", submit);
+}
+
+/* ============================================================
+   Navigation, progress, presentation mode
+   ============================================================ */
+function isDone(v) {
+  if (v.exercises && v.exercises.length) {
+    return v.exercises.every(function (e) { return !!store.solved[e.id]; });
+  }
+  return !!store.read[v.id];
+}
+
+function updateProgress() {
+  var total = VIEWS.length, done = VIEWS.filter(isDone).length;
+  var pct = total ? Math.round((done / total) * 100) : 0;
+  ["#sideBar", "#topBar"].forEach(function (s) {
+    var el = $(s); if (el) el.style.width = pct + "%";
+  });
+  var sp = $("#sidePct"), tp = $("#topPct");
+  if (sp) sp.textContent = pct + "%";
+  if (tp) tp.textContent = pct + "%";
+  var sn = $("#sideNote");
+  if (sn) sn.textContent = done + " من " + total + " أقسام مكتملة";
+  $$("#nav a").forEach(function (a) {
+    var v = VIEWS.filter(function (x) { return x.id === a.dataset.id; })[0];
+    if (v) a.classList.toggle("done", isDone(v));
+  });
+}
+
+function buildNav() {
+  var nav = $("#nav"), html = "";
+  GROUPS.forEach(function (g) {
+    var items = VIEWS.filter(function (v) { return v.group === g.id; });
+    if (!items.length) return;
+    html += '<div class="nav-group">' + g.label + "</div>";
+    items.forEach(function (v) {
+      html += '<a href="#' + v.id + '" data-id="' + v.id + '">' + tickSVG() + "<span>" + v.nav + "</span></a>";
+    });
+  });
+  nav.innerHTML = html;
+}
+
+function show(id) {
+  var found = VIEWS.filter(function (v) { return v.id === id; })[0];
+  if (!found) found = VIEWS[0];
+  VIEWS.forEach(function (v) {
+    var el = document.getElementById("v-" + v.id);
+    if (el) el.hidden = v.id !== found.id;
+  });
+  $$("#nav a").forEach(function (a) { a.classList.toggle("active", a.dataset.id === found.id); });
+  current = found.id;
+  closeMenu();
+  window.scrollTo(0, 0);
+}
+
+var HASH_OK = window.location.protocol !== "about:";
+function navTo(id) {
+  if (!VIEWS.some(function (v) { return v.id === id; })) return;
+  if (HASH_OK) {
+    try { if (window.location.hash !== "#" + id) window.location.hash = id; } catch (e) {}
+  }
+  show(id);
+}
+
+function gotoRel(dir) {
+  var i = VIEWS.map(function (v) { return v.id; }).indexOf(current);
+  var j = dir === "next" ? i + 1 : i - 1;
+  if (j >= 0 && j < VIEWS.length) navTo(VIEWS[j].id);
+}
+
+function setPresent(on) {
+  var should = typeof on === "boolean" ? on : !document.body.classList.contains("present");
+  document.body.classList.toggle("present", should);
+  if (!should && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
+}
+
+function revealCurrent() {
+  var sec = document.getElementById("v-" + current);
+  if (!sec) return;
+  $$(".ex", sec).forEach(function (ex) {
+    var b = $('[data-a="solution"]', ex);
+    if (b) b.click();
+  });
+}
+
+function closeMenu() {
+  var sb = $("#sidebar"), sc = $("#scrim");
+  if (sb) sb.classList.remove("open");
+  if (sc) sc.classList.remove("show");
+}
+
+/* ---------------- wiring ---------------- */
+$("#menuBtn").addEventListener("click", function () {
+  var sb = $("#sidebar"), sc = $("#scrim");
+  var open = !sb.classList.contains("open");
+  sb.classList.toggle("open", open);
+  sc.classList.toggle("show", open);
+});
+$("#scrim").addEventListener("click", closeMenu);
+
+document.addEventListener("click", function (e) {
+  var a = e.target.closest ? e.target.closest('a[href^="#"]') : null;
+  if (!a) return;
+  e.preventDefault();
+  navTo(a.getAttribute("href").slice(1));
+});
+$("#presentBtn").addEventListener("click", function () { setPresent(); });
+
+$("#content").addEventListener("click", function (e) {
+  var navBtn = e.target.closest("[data-nav]");
+  if (navBtn && !navBtn.disabled) { gotoRel(navBtn.dataset.nav); return; }
+  var pt = e.target.closest("[data-present-toggle]");
+  if (pt) setPresent(true);
+});
+
+$("#presentBar").addEventListener("click", function (e) {
+  var b = e.target.closest("[data-p]");
+  if (!b) return;
+  var act = b.dataset.p;
+  var viz = VIZ[current];
+  if (act === "prev") gotoRel("prev");
+  else if (act === "next") gotoRel("next");
+  else if (act === "play" && viz) viz.play();
+  else if (act === "pause" && viz) viz.pause();
+  else if (act === "reset" && viz) viz.reset();
+  else if (act === "step" && viz) viz.step(1);
+  else if (act === "reveal") revealCurrent();
+  else if (act === "full") {
+    if (!document.fullscreenElement) {
+      if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function () {});
+    } else if (document.exitFullscreen) document.exitFullscreen();
+  } else if (act === "exit") setPresent(false);
+});
+
+window.addEventListener("hashchange", function () { show(window.location.hash.replace("#", "")); });
+
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape") { setPresent(false); return; }
+  if (!document.body.classList.contains("present")) return;
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+  var v = VIZ[current];
+  if (!v) return;
+  if (e.key === "ArrowLeft") { v.step(1); e.preventDefault(); }
+  else if (e.key === "ArrowRight") { v.step(-1); e.preventDefault(); }
+});
+
+/* ---------------- boot ---------------- */
+(function boot() {
+  var content = $("#content");
+  VIEWS.forEach(function (v) {
+    var s = document.createElement("section");
+    s.className = "view";
+    s.id = "v-" + v.id;
+    s.hidden = true;
+    s.innerHTML = v.html();
+    content.appendChild(s);
+    if (v.mount) v.mount(s);
+  });
+  buildNav();
+  updateProgress();
+  show(window.location.hash.replace("#", "") || VIEWS[0].id);
+})();
+</script>
+</body>
+</html>
